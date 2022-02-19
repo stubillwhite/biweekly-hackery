@@ -3,13 +3,13 @@ package wordle.internal
 import org.mockito.ArgumentMatchers.any
 import wordle.internal.Puzzle
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.*
 import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
 import wordle.internal.domain.{Correct, Display, GuessFeedback, InProgress, IncorrectLetter, IncorrectLocation, LetterFeedback, Lost, Player, Won}
 
-class PuzzleTest extends AnyFlatSpec with MockitoSugar with BeforeAndAfterEach {
+class PuzzleTest extends AnyFlatSpec with MockitoSugar with Matchers with BeforeAndAfterEach {
 
   private val mockPlayer: Player = mock[Player]
 

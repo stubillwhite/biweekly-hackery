@@ -3,7 +3,7 @@ package wordle
 import wordle.internal.{ComputerPlayer, HumanPlayer, TextDisplay, Puzzle}
 import io.Source
 
-object Application {
+object Wordle {
 
   def main(args: Array[String]): Unit = {
     val display = TextDisplay()
