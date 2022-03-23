@@ -1,12 +1,34 @@
 package texasholdem.internal
 
-import texasholdem.internal.domain.Round.*
-import texasholdem.internal.domain.{Action, Card, Deck, Game, Player, PlayerView, PlayerId, Round}
-import texasholdem.internal.PokerHandClassifier.*
+import texasholdem.internal.domain.ActionRound.*
+import texasholdem.internal.domain.{Action, Card, Deck, Game, Player, PlayerView, PlayerId, ActionRound}
 
 object TexasHoldEmRules {
 
   type RoundHandler = Game => Game
+
+  def play(game: Game): Game = {
+    val roundHandlers = List(
+      dealCardToPlayers,
+      dealCardToPlayers,
+      preFlopActions,
+      burnCard,
+      dealFlop,
+      flopActions,
+      burnCard,
+      dealTurn,
+      turnActions,
+      burnCard,
+      dealRiver,
+      riverActions,
+      showdown
+    )
+
+    roundHandlers.foldLeft(game) {
+      case (game, handler) =>
+        handler(game)
+    }
+  }
 
   private val dealCardToPlayers: RoundHandler = (game: Game) => {
     def dealToPlayer(game: Game, playerId: PlayerId): Game = {
@@ -55,13 +77,7 @@ object TexasHoldEmRules {
   }
 
   private val showdown: RoundHandler = (game: Game) => {
-    // TODO: Move to display
-    println("Hand ranks:")
-    game.playOrder
-      .map { playerId => (playerId, bestPokerHand(game.holeCards(playerId), game.communityCards)) }
-      .sortBy(_._2)
-      .foreach { case (playerId, _) => println(s"  ${playerId}") }
-
+    // TODO: Implement me next time...
     game
   }
 
@@ -75,37 +91,14 @@ object TexasHoldEmRules {
     game.display.displayGame(game)
   }
 
-  private def placeholderForPlayerActionHandling(round: Round, game: Game): Game = {
+  private def placeholderForPlayerActionHandling(actionRound: ActionRound, game: Game): Game = {
     def getPlayerAction(playerId: PlayerId): Action = {
-      val playerView = PlayerView(round, game.holeCards(playerId), game.communityCards, game.playOrder, Map())
+      val playerView = PlayerView(actionRound, game.holeCards(playerId), game.communityCards, game.playOrder, Map())
       game.playersById(playerId).getAction(playerView)
     }
 
     displayState(game)
     game.playOrder.map(getPlayerAction)
     game
-  }
-
-  def play(game: Game): Game = {
-    val roundHandlers = List(
-      dealCardToPlayers,
-      dealCardToPlayers,
-      preFlopActions,
-      burnCard,
-      dealFlop,
-      flopActions,
-      burnCard,
-      dealTurn,
-      turnActions,
-      burnCard,
-      dealRiver,
-      riverActions,
-      showdown
-    )
-
-    roundHandlers.foldLeft(game) {
-      case (game, handler) =>
-        handler(game)
-    }
   }
 }

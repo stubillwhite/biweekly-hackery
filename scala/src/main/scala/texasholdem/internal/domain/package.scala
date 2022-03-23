@@ -32,18 +32,18 @@ package object domain {
     case class Raise(amount: Int) extends Action
   }
 
-  sealed trait Round
+  sealed trait ActionRound
 
-  object Round {
-    case object PreFlop extends Round
-    case object Flop extends Round
-    case object Turn extends Round
-    case object River extends Round
+  object ActionRound {
+    case object PreFlop extends ActionRound
+    case object Flop extends ActionRound
+    case object Turn extends ActionRound
+    case object River extends ActionRound
   }
 
   type PlayerId = String
 
-  case class PlayerView(round: Round,
+  case class PlayerView(actionRound: ActionRound,
                         holeCards: List[Card],
                         communityCards: List[Card],
                         playOrder: List[PlayerId],

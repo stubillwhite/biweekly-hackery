@@ -1,7 +1,7 @@
 package texasholdem
 
-import texasholdem.internal.domain.Round
-import texasholdem.internal.domain.Round.*
+import texasholdem.internal.domain.ActionRound
+import texasholdem.internal.domain.ActionRound.*
 import texasholdem.internal.domain.Game
 import texasholdem.internal.{ComputerPlayer, ConsoleDisplay, TexasHoldEmRules, StandardDeck}
 
