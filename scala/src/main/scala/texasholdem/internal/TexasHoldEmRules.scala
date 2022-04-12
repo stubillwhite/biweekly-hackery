@@ -2,6 +2,7 @@ package texasholdem.internal
 
 import texasholdem.internal.domain.ActionRound.*
 import texasholdem.internal.domain.{Action, Card, Deck, Game, Player, PlayerView, PlayerId, ActionRound}
+import texasholdem.internal.PokerHandClassifier.*
 
 object TexasHoldEmRules {
 
@@ -77,7 +78,8 @@ object TexasHoldEmRules {
   }
 
   private val showdown: RoundHandler = (game: Game) => {
-    // TODO: Implement me next time...
+    val playerHands = game.playOrder.map { playerId => (playerId, bestPokerHand(game.holeCards(playerId), game.communityCards)) }.toMap
+    game.display.displayShowdown(playerHands)
     game
   }
 

@@ -1,5 +1,7 @@
 package texasholdem.internal
 
+import texasholdem.internal.PokerHandClassifier.PokerHand
+
 import scala.util.Random
 
 package object domain {
@@ -56,6 +58,7 @@ package object domain {
 
   trait Display {
     def displayGame(game: Game): Unit
+    def displayShowdown(playerHands: Map[PlayerId, PokerHand]): Unit
   }
 
   case class Game(deck: Deck,
