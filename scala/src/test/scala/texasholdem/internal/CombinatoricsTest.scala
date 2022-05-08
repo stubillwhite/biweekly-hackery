@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import texasholdem.internal.Combinatorics.*
 
-class CombinatoricsTest extends AnyFlatSpec with Matchers with MockitoSugar {
+class CombinatoricsTest extends AnyFlatSpec with Matchers {
 
   behavior of "selectWithoutReplacement"
 

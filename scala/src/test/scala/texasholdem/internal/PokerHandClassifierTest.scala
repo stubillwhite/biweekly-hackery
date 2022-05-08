@@ -2,7 +2,6 @@ package texasholdem.internal
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.mockito.MockitoSugar
 import texasholdem.internal.domain.Card
 import texasholdem.internal.domain.Suits.*
 import texasholdem.internal.PokerHandClassifier.PokerHands.*
@@ -11,7 +10,7 @@ import texasholdem.internal.testcommon.TestCards
 
 import scala.util.Random.shuffle
 
-class PokerHandClassifierTest extends AnyFlatSpec with Matchers with MockitoSugar with TestCards {
+class PokerHandClassifierTest extends AnyFlatSpec with Matchers with TestCards {
 
   behavior of "classifyHand"
 
