@@ -57,7 +57,7 @@ public class WorldCupPrognostication {
                                 eliminationStage(groupStageB, groupStageA),
                                 eliminationStage(groupStageA, groupStageB)));
 
-        tournament.predictOutcome(new ELORatingBasedPredictor(false));
+        tournament.predictOutcome(new ELORatingBasedPredictor(true));
         return tournament.getWinner().get();
     }
 
