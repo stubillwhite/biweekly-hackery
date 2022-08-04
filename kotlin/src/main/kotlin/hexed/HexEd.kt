@@ -38,19 +38,24 @@ object HexEd {
 
     data class Location(val x: Int, val y: Int)
 
+    fun solutionPartOne(input: String): Int {
+        val directions = parseInput(input)
+        val locationsVisited = locationsVisited(directions)
+        return distanceFromOrigin(locationsVisited.last())
+    }
+
+    fun solutionPartTwo(input: String): Int {
+        val directions = parseInput(input)
+        val locationsVisited = locationsVisited(directions)
+        return locationsVisited.map { distanceFromOrigin(it) }.max()!!
+    }
+
     @JvmStatic
     fun main(args: Array<String>) {
-        val directions = parseInput(readInput("hexed/input.txt"))
-        val locationsVisited = locationsVisited(directions)
+        val input = readInput("hexed/input.txt")
 
-        // Part one
-        val finalDistance = distanceFromOrigin(locationsVisited.last())
-        println("Solution to part one: $finalDistance")
-
-        // Part two
-        val furthestDistance = locationsVisited.map { distanceFromOrigin(it) }.max()
-        println("Solution to part two: $furthestDistance")
-
+        println("Solution to part one: ${solutionPartOne(input)}")
+        println("Solution to part two: ${solutionPartTwo(input)}")
         println("Done")
     }
 
