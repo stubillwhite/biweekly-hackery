@@ -9,7 +9,11 @@ repositories {
 }
 
 ext {
-    javaMainClass = "marsrover.MarsRover"
+    javaMainClass = "ScratchpadTwo"
+}
+
+run {
+    standardInput = System.in
 }
 
 application {
@@ -20,8 +24,23 @@ test {
     useJUnitPlatform()
 }
 
+jar {
+    manifest {
+        attributes "Main-Class": "ScratchpadTwo"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
 dependencies {
-    implementation      "com.google.guava:guava:29.0-jre"
+    implementation      "com.google.guava:guava:29.0-jre",
+                        "org.jline:jline:3.21.0",
+                        "org.jline:jline-terminal-jansi:3.21.0",
+                        "org.fusesource.jansi:jansi:2.4.0"
 
     testImplementation  "org.junit.jupiter:junit-jupiter-api:5.3.1",
                         "org.junit.jupiter:junit-jupiter-params:5.3.1",
