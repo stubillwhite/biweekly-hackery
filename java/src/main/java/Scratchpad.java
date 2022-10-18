@@ -11,6 +11,14 @@ public class Scratchpad extends JFrame {
                 System.out.println(keyCode);
             }
         });
+
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                e.getWindow().dispose();
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -18,6 +26,7 @@ public class Scratchpad extends JFrame {
             Scratchpad f = new Scratchpad();
             f.setFocusable(true);
             f.setVisible(true);
+            f.setSize(200, 200);
         });
     }
 
