@@ -1,11 +1,27 @@
 package snakegame.internal;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static snakegame.internal.Direction.UP;
+import static snakegame.internal.Direction.RIGHT;
+import static snakegame.internal.Direction.DOWN;
+import static snakegame.internal.Direction.LEFT;
+
 public class Snake {
+
+    private static final Map<Direction, Set<Direction>> ALLOWED_DIRECTION_CHANGES =
+            ImmutableMap.of(
+                    UP, Sets.newHashSet(LEFT, RIGHT),
+                    RIGHT, Sets.newHashSet(UP, DOWN),
+                    DOWN, Sets.newHashSet(RIGHT, LEFT),
+                    LEFT, Sets.newHashSet(DOWN, UP));
 
     private List<Location> body;
     private Direction currentDirection;
@@ -36,7 +52,9 @@ public class Snake {
     }
 
     public void setDesiredDirection(Direction direction) {
-        this.desiredDirection = direction;
+        if (ALLOWED_DIRECTION_CHANGES.get(currentDirection).contains(direction)) {
+            desiredDirection = direction;
+        }
     }
 
     private Location getLocationAhead() {
@@ -55,7 +73,7 @@ public class Snake {
                 return new Location(head.getX() - 1, head.getY());
 
             default:
-                throw new IllegalStateException("Unknown facing " + currentDirection);
+                throw new IllegalStateException("Unknown direction " + currentDirection);
         }
     }
 
