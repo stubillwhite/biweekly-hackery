@@ -1,93 +1,88 @@
 package snakegame.internal.pathfinding;
 
-import com.google.common.collect.Sets;
-import snakegame.internal.Location;
+import com.google.common.collect.Queues;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-// https://stackabuse.com/graphs-in-java-a-star-algorithm/
-public class Pathfinder {
+public class Pathfinder<T> {
 
-    private final PriorityQueue<CostedLocation> closedList = new PriorityQueue<>();
-    private final PriorityQueue<CostedLocation> openList = new PriorityQueue<>();
-    private final Set<Object> nodes;
+    private final PriorityQueue<CostedNode<T>> closedList = Queues.newPriorityQueue();
+    private final PriorityQueue<CostedNode<T>> openList = Queues.newPriorityQueue();
 
-    private final int WIDTH = 10;
-    private final int HEIGHT = 10;
+    private final CostFunction<T> heuristicFunction;
+    private final CostFunction<T> moveFunction;
 
-    private final Location start;
-    private final Location end;
-    private final CostFunction heuristicFunction;
-    private final CostFunction moveFunction;
-
-    public interface CostFunction {
-        double calculateCost(Location start, Location end);
+    public interface CostFunction<T> {
+        double calculateCost(T start, T end);
     }
 
-    private static class CostedLocation implements Comparable {
-        public final Location location;
+    public interface NeighbourFunction<T> {
+        Set<T> neighboursOf(T node);
+    }
+
+    private static class CostedNode<T> implements Comparable<CostedNode<T>> {
+        public final T node;
         public final double heuristicCost;
         public final double moveCost;
-        public final CostedLocation parent;
+        public final CostedNode<T> parent;
 
-        public CostedLocation(Location location,
-                              double heuristicCost,
-                              double moveCost,
-                              CostedLocation parent) {
-            this.location = location;
+        public CostedNode(T node,
+                          double heuristicCost,
+                          double moveCost,
+                          CostedNode<T> parent) {
+            this.node = node;
             this.heuristicCost = heuristicCost;
             this.moveCost = moveCost;
             this.parent = parent;
         }
 
         @Override
-        public int compareTo(Object o) {
-            final CostedLocation that = CostedLocation.class.cast(o);
-            return Double.compare(this.heuristicCost + this.moveCost, that.heuristicCost + that.moveCost);
+        public String toString() {
+            return node.toString();
         }
 
         @Override
-        public String toString() {
-            return location.toString();
+        public int compareTo(CostedNode other) {
+            return Double.compare(this.heuristicCost + this.moveCost, other.heuristicCost + other.moveCost);
         }
     }
 
-    public Pathfinder(Location start,
-                      Location end,
-                      CostFunction heuristicFunction,
-                      CostFunction moveFunction) {
-        this.start = start;
-        this.end = end;
-        this.nodes = Sets.newHashSet();
+    public Pathfinder(CostFunction<T> heuristicFunction,
+                      CostFunction<T> moveFunction) {
         this.heuristicFunction = heuristicFunction;
         this.moveFunction = moveFunction;
     }
 
-    public CostedLocation nextLocation() {
-        openList.add(costLocation(start, null));
+    public List<T> findPath(T start,
+                            T end,
+                            NeighbourFunction<T> neighbourFunction) {
+        openList.clear();
+        closedList.clear();
+
+        openList.add(costNode(start, end, null));
 
         while (!openList.isEmpty()) {
-            final CostedLocation n = openList.peek();
-            if (n.location.equals(end)) {
-                return n;
+            final CostedNode<T> n = openList.peek();
+            if (n.node.equals(end)) {
+                return constructPath(n);
             }
 
-            neighboursOf(n.location).forEach(neighbour -> {
-                final CostedLocation costedNeighbour = costLocation(neighbour, n);
+            neighbourFunction.neighboursOf(n.node).forEach(neighbour -> {
+                final CostedNode<T> costedNeighbour = costNode(neighbour, end, n);
 
-                System.out.printf("Considering %s\n", costedNeighbour);
                 if (!openList.contains(costedNeighbour) && !closedList.contains(costedNeighbour)) {
-                    // A location that hasn't been considered before
+                    // A node that hasn't been considered before
                     openList.add(costedNeighbour);
-                    System.out.printf("  Adding to the open list %s\n", openList.stream().map(CostedLocation::toString).collect(Collectors.joining(" ")));
                 } else {
-                    // A location that has been considered before, but we're finding a different route
+                    // A node that has been considered before, but we're finding a different route
                     if (closedList.contains(costedNeighbour)) {
                         closedList.remove(costedNeighbour);
                         openList.add(costedNeighbour);
-                        System.out.println("  Cheaper than the previous route; removing from the closed list and adding to the open list");
                     }
                 }
 
@@ -99,55 +94,24 @@ public class Pathfinder {
         return null;
     }
 
-    private CostedLocation costLocation(Location location,
-                                        CostedLocation parent) {
-        return new CostedLocation(
-                location,
-                heuristicFunction.calculateCost(location, end),
-                parent == null ? 0.0 : moveFunction.calculateCost(parent.location, location),
+    private List<T> constructPath(CostedNode<T> finalNode) {
+        final List<T> path = Stream.iterate(finalNode, x -> x.parent)
+                .takeWhile(x -> x != null)
+                .map(x -> x.node)
+                .collect(Collectors.toList());
+
+        Collections.reverse(path);
+
+        return path;
+    }
+
+    private CostedNode<T> costNode(T node,
+                                   T end,
+                                   CostedNode<T> parent) {
+        return new CostedNode<T>(
+                node,
+                heuristicFunction.calculateCost(node, end),
+                parent == null ? 0.0 : moveFunction.calculateCost(parent.node, node),
                 parent);
-    }
-
-    private Set<Location> neighboursOf(Location location) {
-        final int y = location.getY();
-        final int x = location.getX();
-
-        final Set<Location> locations = Sets.newHashSet(
-                new Location(x - 1, y - 1), new Location(x, y - 1), new Location(x + 1, y - 1),
-                new Location(x - 1, y),     /*                  */  new Location(x + 1, y),
-                new Location(x - 1, y + 1), new Location(x, y + 1), new Location(x + 1, y + 1));
-
-        return locations.stream()
-                .filter(this::isInBounds)
-                .collect(Collectors.toSet());
-    }
-
-    private boolean isInBounds(Location loc) {
-        return 0 <= loc.getX() && loc.getX() < WIDTH &&
-                0 <= loc.getY() && loc.getY() <= HEIGHT;
-    }
-
-    private static double chebyshevDistance(Location a,
-                                            Location b) {
-        return Math.max(
-                Math.abs(a.getX() - b.getX()),
-                Math.abs(a.getY() - b.getY())
-        );
-    }
-
-    public static void main(String[] args) {
-
-        final Pathfinder pathfinder = new Pathfinder(new Location(3, 3),
-                new Location(5, 6),
-                Pathfinder::chebyshevDistance,
-                (start, end) -> 1.0);
-
-        CostedLocation location = pathfinder.nextLocation();
-        while (location != null) {
-            System.out.println(location);
-            location = location.parent;
-        }
-
-        System.out.println("Done");
     }
 }
