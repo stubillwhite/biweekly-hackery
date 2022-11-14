@@ -9,12 +9,15 @@ repositories {
 }
 
 ext {
-    // javaMainClass = "marsrover.MarsRover"
-    javaMainClass = "gameofblobs.GameOfBlobs"
+    javaMainClass = "connectfour.ConnectFour"
 }
 
 application {
     mainClass.set(javaMainClass)
+}
+
+run {
+    standardInput = System.in
 }
 
 test {
