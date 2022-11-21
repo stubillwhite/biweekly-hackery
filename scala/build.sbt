@@ -9,7 +9,8 @@ lazy val root = project
     scalaVersion := scala3Version,
 
     libraryDependencies ++= Seq(
-      "org.scalatest" %%     "scalatest"   % "3.2.10"   % Test,
-      "org.scalatestplus" %% "mockito-3-4" % "3.2.10.0" % Test
+      "org.apache.commons" %  "commons-text" % "1.3",
+      "org.scalatest"      %% "scalatest"    % "3.2.10"   % Test,
+      "org.scalatestplus"  %% "mockito-3-4"  % "3.2.10.0" % Test
     )
   )
