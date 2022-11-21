@@ -47,6 +47,10 @@ public class Snake {
         return body;
     }
 
+    public Direction getCurrentDirection() {
+        return currentDirection;
+    }
+
     public void growBy(int additionalLength) {
         length += additionalLength;
     }
