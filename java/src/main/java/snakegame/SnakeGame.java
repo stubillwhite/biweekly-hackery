@@ -59,16 +59,16 @@ public class SnakeGame {
     public static void main(String[] args) throws Exception {
         final Snake snake = new Snake(new Location(5, 5), Direction.RIGHT, 3);
 
-//        final TextUI.Controller controller = snake::setDesiredDirection;
-        final TextUI.Controller controller = new TextUI.Controller() {
-            @Override
-            public void handleDirection(Direction desiredDirection) {
-            }
-        };
+        final TextUI.UserInputHandler userInputHandler = snake::setDesiredDirection;
+//        final TextUI.Controller controller = new TextUI.Controller() {
+//            @Override
+//            public void handleDirection(Direction desiredDirection) {
+//            }
+//        };
 
-        new ComputerPlayer(snake);
+//        new ComputerPlayer(snake);
 
-        final TextUI textUI = TextUI.createTextUI(WIDTH, HEIGHT, controller);
+        final TextUI textUI = TextUI.createTextUI(WIDTH, HEIGHT, userInputHandler);
         final SnakeGame game = new SnakeGame(textUI, snake);
         while (true) {
             game.tick();

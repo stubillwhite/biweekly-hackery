@@ -12,5 +12,6 @@ public class ComputerPlayer {
         final Direction currentDirection = snake.getCurrentDirection();
 
 
+
     }
 }

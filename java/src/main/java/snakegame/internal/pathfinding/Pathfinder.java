@@ -67,13 +67,13 @@ public class Pathfinder<T> {
         openList.add(costNode(start, end, null));
 
         while (!openList.isEmpty()) {
-            final CostedNode<T> n = openList.peek();
-            if (n.node.equals(end)) {
-                return constructPath(n);
+            final CostedNode<T> nextNode = openList.peek();
+            if (nextNode.node.equals(end)) {
+                return constructPath(nextNode);
             }
 
-            neighbourFunction.neighboursOf(n.node).forEach(neighbour -> {
-                final CostedNode<T> costedNeighbour = costNode(neighbour, end, n);
+            neighbourFunction.neighboursOf(nextNode.node).forEach(neighbour -> {
+                final CostedNode<T> costedNeighbour = costNode(neighbour, end, nextNode);
 
                 if (!openList.contains(costedNeighbour) && !closedList.contains(costedNeighbour)) {
                     // A node that hasn't been considered before
@@ -86,8 +86,8 @@ public class Pathfinder<T> {
                     }
                 }
 
-                openList.remove(n);
-                closedList.add(n);
+                openList.remove(nextNode);
+                closedList.add(nextNode);
             });
         }
 
