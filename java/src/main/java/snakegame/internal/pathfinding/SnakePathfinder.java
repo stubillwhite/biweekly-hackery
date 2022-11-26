@@ -2,12 +2,14 @@ package snakegame.internal.pathfinding;
 
 import com.google.common.collect.Sets;
 import snakegame.internal.Location;
+import snakegame.internal.Snake;
+import snakegame.internal.pathfinding.Pathfinder.CostFunction;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LocationPathfinder {
+public class SnakePathfinder {
 
     // TODO: Needs to be common
     private static final int WIDTH = 20;
@@ -15,15 +17,24 @@ public class LocationPathfinder {
 
     private final Pathfinder<Location> pathfinder;
 
-    public LocationPathfinder() {
-        pathfinder = new Pathfinder<>(
-                LocationPathfinder::chebyshevDistance,
-                LocationPathfinder::constantMoveCost);
+    public SnakePathfinder() {
+        pathfinder = new Pathfinder<>(SnakePathfinder::chebyshevDistance);
     }
 
-    public List<Location> findPath(Location start,
+    public List<Location> findPath(Snake snake,
                                    Location end) {
-        return pathfinder.findPath(start, end, LocationPathfinder::neighboursOf);
+
+        final CostFunction<Location> moveFunction = (startLoc, endLoc) -> {
+            if (snake.getBody().contains(endLoc)) {
+                return Integer.MAX_VALUE;
+            }
+            else {
+                return 1.0;
+            }
+        };
+
+        final Location head = snake.getBody().get(0);
+        return pathfinder.findPath(head, end, moveFunction, SnakePathfinder::neighboursOf);
     }
 
     private static Set<Location> neighboursOf(Location location) {
@@ -36,7 +47,7 @@ public class LocationPathfinder {
                                             new Location(x, y + 1));
 
         return locations.stream()
-                .filter(LocationPathfinder::isInBounds)
+                .filter(SnakePathfinder::isInBounds)
                 .collect(Collectors.toSet());
     }
 
@@ -45,16 +56,11 @@ public class LocationPathfinder {
                 0 <= loc.getY() && loc.getY() <= HEIGHT;
     }
 
-    private static double chebyshevDistance(Location a,
-                                            Location b) {
+    private static double chebyshevDistance(Location start,
+                                            Location end) {
         return Math.max(
-                Math.abs(a.getX() - b.getX()),
-                Math.abs(a.getY() - b.getY())
+                Math.abs(start.getX() - end.getX()),
+                Math.abs(start.getY() - end.getY())
         );
-    }
-
-    public static double constantMoveCost(Location a,
-                                          Location b) {
-        return 1.0;
     }
 }

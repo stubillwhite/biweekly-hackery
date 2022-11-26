@@ -15,7 +15,6 @@ public class Pathfinder<T> {
     private final PriorityQueue<CostedNode<T>> openList = Queues.newPriorityQueue();
 
     private final CostFunction<T> heuristicFunction;
-    private final CostFunction<T> moveFunction;
 
     public interface CostFunction<T> {
         double calculateCost(T start, T end);
@@ -52,19 +51,18 @@ public class Pathfinder<T> {
         }
     }
 
-    public Pathfinder(CostFunction<T> heuristicFunction,
-                      CostFunction<T> moveFunction) {
+    public Pathfinder(CostFunction<T> heuristicFunction) {
         this.heuristicFunction = heuristicFunction;
-        this.moveFunction = moveFunction;
     }
 
     public List<T> findPath(T start,
                             T end,
+                            CostFunction<T> moveFunction,
                             NeighbourFunction<T> neighbourFunction) {
         openList.clear();
         closedList.clear();
 
-        openList.add(costNode(start, end, null));
+        openList.add(costNode(moveFunction, start, end, null));
 
         while (!openList.isEmpty()) {
             final CostedNode<T> nextNode = openList.peek();
@@ -73,7 +71,7 @@ public class Pathfinder<T> {
             }
 
             neighbourFunction.neighboursOf(nextNode.node).forEach(neighbour -> {
-                final CostedNode<T> costedNeighbour = costNode(neighbour, end, nextNode);
+                final CostedNode<T> costedNeighbour = costNode(moveFunction, neighbour, end, nextNode);
 
                 if (!openList.contains(costedNeighbour) && !closedList.contains(costedNeighbour)) {
                     // A node that hasn't been considered before
@@ -105,7 +103,7 @@ public class Pathfinder<T> {
         return path;
     }
 
-    private CostedNode<T> costNode(T node,
+    private CostedNode<T> costNode(CostFunction<T> moveFunction, T node,
                                    T end,
                                    CostedNode<T> parent) {
         return new CostedNode<T>(

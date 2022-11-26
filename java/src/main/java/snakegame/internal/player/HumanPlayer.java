@@ -1,5 +1,8 @@
-package snakegame.internal;
+package snakegame.internal.player;
 
+import snakegame.internal.Direction;
+import snakegame.internal.Location;
+import snakegame.internal.Snake;
 import snakegame.internal.TextUI.KeyPressListener;
 
 public class HumanPlayer implements Player, KeyPressListener {

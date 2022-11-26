@@ -1,6 +1,8 @@
 package snakegame;
 
 import snakegame.internal.*;
+import snakegame.internal.player.ComputerPlayer;
+import snakegame.internal.player.Player;
 
 import java.util.Random;
 
@@ -21,7 +23,7 @@ public class SnakeGame {
         this.textUI = textUI;
         this.player = player;
         this.snake = snake;
-        this.foodLocation = randomLocation();
+        this.foodLocation = randomEmptyLocation();
     }
 
     public void tick() {
@@ -30,7 +32,7 @@ public class SnakeGame {
         snake.update();
 
         if (snake.getBody().contains(foodLocation)) {
-            foodLocation = randomLocation();
+            foodLocation = randomEmptyLocation();
             snake.growBy(3);
         }
 
@@ -52,9 +54,15 @@ public class SnakeGame {
         textUI.setContent(builder.toString());
     }
 
-    private Location randomLocation() {
+    private Location randomEmptyLocation() {
         final Random random = new Random();
-        return new Location(random.nextInt(WIDTH), random.nextInt(HEIGHT));
+
+        Location location;
+        do {
+            location = new Location(random.nextInt(WIDTH), random.nextInt(HEIGHT));
+        } while (snake.getBody().contains(location));
+
+        return location;
     }
 
     public static void main(String[] args) throws Exception {
