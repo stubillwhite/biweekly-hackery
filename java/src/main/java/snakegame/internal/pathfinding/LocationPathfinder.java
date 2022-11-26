@@ -9,8 +9,9 @@ import java.util.stream.Collectors;
 
 public class LocationPathfinder {
 
-    private static final int WIDTH = 10;
-    private static final int HEIGHT = 10;
+    // TODO: Needs to be common
+    private static final int WIDTH = 20;
+    private static final int HEIGHT = 20;
 
     private final Pathfinder<Location> pathfinder;
 
@@ -30,9 +31,9 @@ public class LocationPathfinder {
         final int x = location.getX();
 
         final Set<Location> locations = Sets.newHashSet(
-                new Location(x - 1, y - 1), new Location(x, y - 1), new Location(x + 1, y - 1),
+                                            new Location(x, y - 1),
                 new Location(x - 1, y),     /*                  */  new Location(x + 1, y),
-                new Location(x - 1, y + 1), new Location(x, y + 1), new Location(x + 1, y + 1));
+                                            new Location(x, y + 1));
 
         return locations.stream()
                 .filter(LocationPathfinder::isInBounds)

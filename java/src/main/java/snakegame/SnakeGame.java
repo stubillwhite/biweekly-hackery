@@ -60,7 +60,8 @@ public class SnakeGame {
     public static void main(String[] args) throws Exception {
         final Snake snake = new Snake(new Location(5, 5), Direction.RIGHT, 3);
 
-        final HumanPlayer player = new HumanPlayer();
+//        final HumanPlayer player = new HumanPlayer();
+        final ComputerPlayer player = new ComputerPlayer();
 
         final TextUI textUI = TextUI.createTextUI(WIDTH, HEIGHT, player);
         final SnakeGame game = new SnakeGame(textUI, player, snake);
