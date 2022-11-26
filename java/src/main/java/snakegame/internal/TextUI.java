@@ -12,15 +12,13 @@ import static snakegame.internal.Direction.*;
 
 public class TextUI extends JPanel {
 
-    public interface UserInputHandler {
-        void handleDirection(Snake snake, Direction desiredDirection);
-
-        void handleUpdate(Snake snake);
+    public interface KeyPressListener {
+        void handleKeyPress(Direction direction);
     }
 
     private final JTextArea textArea;
 
-    public TextUI(int width, int height, UserInputHandler userInputHandler) {
+    public TextUI(int width, int height, KeyPressListener keyPressListener) {
         super(new GridBagLayout());
 
         textArea = new JTextArea(height, width);
@@ -47,7 +45,7 @@ public class TextUI extends JPanel {
             public void keyPressed(KeyEvent e) {
                 final int keyCode = e.getKeyCode();
                 if (controlMap.containsKey(keyCode)) {
-                    userInputHandler.handleDirection(controlMap.get(keyCode));
+                    keyPressListener.handleKeyPress(controlMap.get(keyCode));
                 }
             }
         });
@@ -57,7 +55,7 @@ public class TextUI extends JPanel {
         textArea.setText(text);
     }
 
-    public static TextUI createTextUI(int width, int height, UserInputHandler userInputHandler) {
+    public static TextUI createTextUI(int width, int height, KeyPressListener userInputHandler) {
         final JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

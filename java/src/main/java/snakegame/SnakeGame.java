@@ -1,9 +1,6 @@
 package snakegame;
 
-import snakegame.internal.Direction;
-import snakegame.internal.Location;
-import snakegame.internal.Snake;
-import snakegame.internal.TextUI;
+import snakegame.internal.*;
 
 import java.util.Random;
 
@@ -13,17 +10,23 @@ public class SnakeGame {
     private static final int HEIGHT = 20;
 
     private final TextUI textUI;
+    private final Player player;
     private final Snake snake;
+
     private Location foodLocation;
 
     public SnakeGame(TextUI textUI,
+                     Player player,
                      Snake snake) {
         this.textUI = textUI;
+        this.player = player;
         this.snake = snake;
         this.foodLocation = randomLocation();
     }
 
     public void tick() {
+        snake.setDesiredDirection(player.getDesiredDirection(snake, foodLocation));
+
         snake.update();
 
         if (snake.getBody().contains(foodLocation)) {
@@ -38,11 +41,9 @@ public class SnakeGame {
 
                 if (snake.getBody().contains(location)) {
                     builder.append("@");
-                }
-                else if (location.equals(foodLocation)) {
+                } else if (location.equals(foodLocation)) {
                     builder.append("*");
-                }
-                else {
+                } else {
                     builder.append(" ");
                 }
             }
@@ -59,17 +60,10 @@ public class SnakeGame {
     public static void main(String[] args) throws Exception {
         final Snake snake = new Snake(new Location(5, 5), Direction.RIGHT, 3);
 
-        final TextUI.UserInputHandler userInputHandler = snake::setDesiredDirection;
-//        final TextUI.Controller controller = new TextUI.Controller() {
-//            @Override
-//            public void handleDirection(Direction desiredDirection) {
-//            }
-//        };
+        final HumanPlayer player = new HumanPlayer();
 
-//        new ComputerPlayer(snake);
-
-        final TextUI textUI = TextUI.createTextUI(WIDTH, HEIGHT, userInputHandler);
-        final SnakeGame game = new SnakeGame(textUI, snake);
+        final TextUI textUI = TextUI.createTextUI(WIDTH, HEIGHT, player);
+        final SnakeGame game = new SnakeGame(textUI, player, snake);
         while (true) {
             game.tick();
             Thread.sleep(100);
