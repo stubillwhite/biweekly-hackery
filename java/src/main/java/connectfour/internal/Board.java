@@ -24,7 +24,7 @@ public class Board {
     }
 
     public boolean dropToken(int column, Color color) {
-        if (isValidMove(column)) {
+        if (!isValidMove(column)) {
             return false;
         } else {
             final Location location = new Location(column, lowestEmptyRowInColumn(column));
