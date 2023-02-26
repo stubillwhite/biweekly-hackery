@@ -9,4 +9,3 @@ build/
 *.db
 gradlew
 gradlew.bat
-trash/

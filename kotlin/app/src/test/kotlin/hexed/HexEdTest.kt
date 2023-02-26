@@ -4,7 +4,8 @@ import assertk.assert
 import assertk.assertions.isEqualTo
 import hexed.HexEd.solutionPartOne
 import hexed.HexEd.solutionPartTwo
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertNotNull
 
 class HexEdTest {
 
