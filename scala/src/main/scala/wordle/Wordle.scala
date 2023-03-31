@@ -9,7 +9,7 @@ object Wordle {
     val display = TextDisplay()
 
     val wordList = loadWordList()
-    val puzzle = Puzzle.newPuzzle(loadWordList(), new ComputerPlayer(wordList))
+    val puzzle = Puzzle.newPuzzle(wordList, new ComputerPlayer(wordList))
 
     val states = Iterator.iterate(puzzle)(_.nextState()).takeWhile(_ != null)
     states.foreach(display.display)
