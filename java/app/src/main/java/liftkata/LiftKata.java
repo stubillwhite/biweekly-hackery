@@ -4,11 +4,10 @@ import com.google.common.collect.Lists;
 import liftkata.internal.*;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class LiftKata {
     public static void main(String[] args) {
-        final Elevator elevator = new Elevator();
-
         final List<Floor> floors = Lists.newArrayList(
                 new Floor(0),
                 new Floor(1),
@@ -17,22 +16,33 @@ public class LiftKata {
                 new Floor(4)
         );
 
+        final Elevator elevator = new Elevator(floors, 0);
+
         final Passenger passengerA = new Passenger("A", 1);
-        final Passenger passengerB = new Passenger("B", 2);
-        final Passenger passengerC = new Passenger("C", 3);
-        final Passenger passengerD = new Passenger("D", 4);
 
-        floors.get(0).getPassengers().add(passengerA);
-        floors.get(1).getPassengers().add(passengerB);
-        floors.get(2).getPassengers().add(passengerC);
-
-        elevator.embark(passengerD);
+        final Floor passengerStartingFloor = floors.get(4);
+        passengerStartingFloor.getPassengers().add(passengerA);
+        passengerA.setCurrentFloor(passengerStartingFloor);
 
         final Building building = new Building(elevator, floors);
-
         final Display display = new Display();
+
+        IntStream.range(0, 10).forEach(x -> {
+            display.display(building);
+            building.updateState();
+            pause();
+        });
+
         display.display(building);
 
         System.out.println("Done");
+    }
+
+    private static void pause() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

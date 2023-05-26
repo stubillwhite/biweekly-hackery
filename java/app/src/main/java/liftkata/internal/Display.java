@@ -21,11 +21,13 @@ public class Display {
         for (Floor floor : floors) {
             display(elevator, floor);
         }
+
+        System.out.printf("\033[%dA", building.getFloors().size() * 4 + 3);
     }
 
     private void display(Elevator elevator, Floor floor) {
 
-        final int floorNumber = floor.getNumber();
+        final int floorNumber = floor.getFloorNumber();
 
         final String waitingFormatStr = String.format("%%-%ds", FLOOR_WIDTH);
         final String liftFormatStr = String.format("%%-%ds", LIFT_WIDTH - 2);

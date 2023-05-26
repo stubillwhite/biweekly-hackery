@@ -11,6 +11,10 @@ plugins {
     application
 }
 
+application {
+    mainClass.set("liftkata.LiftKata")
+}
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()

@@ -7,17 +7,27 @@ import java.util.List;
 public class Floor {
 
     private final List<Passenger> passengers = Lists.newArrayList();
-    private final int number;
+    private final int floorNumber;
 
-    public Floor(int number) {
-        this.number = number;
+    private Elevator elevator;
+
+    public Floor(int floorNumber) {
+        this.floorNumber = floorNumber;
+    }
+
+    public void setElevator(Elevator elevator) {
+        this.elevator = elevator;
     }
 
     public List<Passenger> getPassengers() {
         return passengers;
     }
 
-    public int getNumber() {
-        return number;
+    public int getFloorNumber() {
+        return floorNumber;
+    }
+
+    public void callElevator() {
+        elevator.callToFloor(floorNumber);
     }
 }

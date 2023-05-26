@@ -2,7 +2,7 @@ package liftkata.internal;
 
 import java.util.List;
 
-public class Building {
+public class Building implements Stateful {
 
     private final Elevator elevator;
     private final List<Floor> floors;
@@ -18,5 +18,13 @@ public class Building {
 
     public List<Floor> getFloors() {
         return floors;
+    }
+
+    @Override
+    public void updateState() {
+        elevator.updateState();
+        floors.forEach(floor -> {
+            floor.getPassengers().forEach(passenger -> passenger.updateState());
+        });
     }
 }
