@@ -6,8 +6,7 @@ import java.util.List;
 
 public class Elevator implements Stateful {
 
-
-    private enum State {
+    public enum State {
         WAITING,
         GOING_UP,
         GOING_DOWN
@@ -28,7 +27,7 @@ public class Elevator implements Stateful {
         floors.forEach(x -> x.setElevator(this));
     }
 
-    public void embark(Passenger passenger) {
+    public void board(Passenger passenger) {
         passengers.add(passenger);
     }
 
@@ -42,6 +41,10 @@ public class Elevator implements Stateful {
 
     public void callToFloor(int floorNumber) {
         currentDestination = floorNumber;
+    }
+
+    public State getCurrentState() {
+        return currentState;
     }
 
     @Override

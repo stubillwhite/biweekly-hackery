@@ -4,7 +4,8 @@ public class Passenger implements Stateful {
 
     private enum State {
         CALLING_ELEVATOR,
-        WAITING_FOR_ELEVATOR
+        WAITING_FOR_ELEVATOR,
+        RIDING_ELEVATOR
     };
 
     private final String id;
@@ -44,6 +45,9 @@ public class Passenger implements Stateful {
                 break;
 
             case WAITING_FOR_ELEVATOR:
+                if (currentFloor.elevatorHasArrived()) {
+                    currentFloor.boardElevator(this);
+                }
                 break;
         }
     }

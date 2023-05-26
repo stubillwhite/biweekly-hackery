@@ -1,5 +1,7 @@
 package liftkata.internal;
 
+import com.google.common.collect.Lists;
+
 import java.util.List;
 
 public class Building implements Stateful {
@@ -24,7 +26,8 @@ public class Building implements Stateful {
     public void updateState() {
         elevator.updateState();
         floors.forEach(floor -> {
-            floor.getPassengers().forEach(passenger -> passenger.updateState());
+            final List<Passenger> passengersOnFloor = Lists.newArrayList(floor.getPassengers());
+            passengersOnFloor.forEach(passenger -> passenger.updateState());
         });
     }
 }
