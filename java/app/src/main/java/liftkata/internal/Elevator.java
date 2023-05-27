@@ -1,7 +1,9 @@
 package liftkata.internal;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 
+import java.util.Deque;
 import java.util.List;
 
 public class Elevator implements Stateful {
@@ -17,7 +19,7 @@ public class Elevator implements Stateful {
 
     private int currentFloor;
     private State currentState;
-    private int currentDestination;
+    private Deque<Integer> destinationQueue = Queues.newArrayDeque();
 
     public Elevator(List<Floor> floors, int startingFloor) {
         this.currentState = State.WAITING;
@@ -44,7 +46,7 @@ public class Elevator implements Stateful {
     }
 
     public void callToFloor(int floorNumber) {
-        currentDestination = floorNumber;
+        destinationQueue.add(floorNumber);
     }
 
     public State getCurrentState() {
@@ -73,12 +75,17 @@ public class Elevator implements Stateful {
     }
 
     private void updateCurrentState() {
-        if (currentFloor > currentDestination) {
-            currentState = State.GOING_DOWN;
-        } else if (currentFloor == currentDestination) {
-            currentState = State.WAITING;
-        } else {
-            currentState = State.GOING_UP;
+        if (!destinationQueue.isEmpty()) {
+            final Integer currentDestination = destinationQueue.peek();
+
+            if (currentFloor > currentDestination) {
+                currentState = State.GOING_DOWN;
+            } else if (currentFloor == currentDestination) {
+                currentState = State.WAITING;
+                destinationQueue.pop();
+            } else {
+                currentState = State.GOING_UP;
+            }
         }
     }
 }

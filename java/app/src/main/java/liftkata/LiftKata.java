@@ -20,11 +20,9 @@ public class LiftKata {
 
         final Elevator elevator = new Elevator(floors, 0);
 
-        final Passenger passengerA = new Passenger("A", 1);
-
-        final Floor passengerStartingFloor = floors.get(4);
-        passengerStartingFloor.getWaitingPassengers().add(passengerA);
-        passengerA.setCurrentFloor(passengerStartingFloor);
+        addPassenger(floors, "A", 4, 1);
+        addPassenger(floors, "B", 2, 0);
+        addPassenger(floors, "C", 3, 2);
 
         final Building building = new Building(elevator, floors);
         final Display display = new Display();
@@ -39,6 +37,13 @@ public class LiftKata {
         pause();
 
         System.out.println("Done");
+    }
+
+    private static void addPassenger(List<Floor> floors, String id, int startingFloor, int destination) {
+        final Passenger passengerA = new Passenger(id, destination);
+        final Floor passengerAStartingFloor = floors.get(startingFloor);
+        passengerAStartingFloor.getWaitingPassengers().add(passengerA);
+        passengerA.setCurrentFloor(passengerAStartingFloor);
     }
 
     private static boolean isComplete(Building building) {
