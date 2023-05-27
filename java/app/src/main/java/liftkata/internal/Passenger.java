@@ -13,6 +13,7 @@ public class Passenger implements Stateful {
 
     private State currentState;
     private Floor currentFloor;
+    private Elevator currentElevator;
 
     public Passenger(String id, int destination) {
         this.id = id;
@@ -40,14 +41,24 @@ public class Passenger implements Stateful {
     public void updateState() {
         switch (currentState) {
             case CALLING_ELEVATOR:
-                currentFloor.callElevator();
+                currentFloor.getElevator().callToFloor(currentFloor.getFloorNumber());
                 currentState = State.WAITING_FOR_ELEVATOR;
                 break;
 
             case WAITING_FOR_ELEVATOR:
                 if (currentFloor.elevatorHasArrived()) {
-                    currentFloor.boardElevator(this);
+                    currentElevator = currentFloor.getElevator();
+
+                    currentFloor.getPassengers().remove(this);
+                    currentFloor = null;
+
+                    currentElevator.board(this);
+                    currentElevator.callToFloor(destination);
+                    currentState = State.RIDING_ELEVATOR;
                 }
+                break;
+
+            case RIDING_ELEVATOR:
                 break;
         }
     }

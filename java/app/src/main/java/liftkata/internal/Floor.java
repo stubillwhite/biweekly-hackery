@@ -27,17 +27,12 @@ public class Floor {
         return floorNumber;
     }
 
-    public void callElevator() {
-        elevator.callToFloor(floorNumber);
-    }
-
     public boolean elevatorHasArrived() {
         return elevator.getCurrentState() == Elevator.State.WAITING
                 && elevator.getCurrentFloor() == floorNumber;
     }
 
-    public void boardElevator(Passenger passenger) {
-        elevator.board(passenger);
-        passengers.remove(passenger);
+    public Elevator getElevator() {
+        return elevator;
     }
 }
