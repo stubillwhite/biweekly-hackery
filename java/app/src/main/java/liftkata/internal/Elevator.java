@@ -31,8 +31,12 @@ public class Elevator implements Stateful {
         passengers.add(passenger);
     }
 
-    public int getCurrentFloor() {
-        return currentFloor;
+    public void leave(Passenger passenger) {
+        passengers.remove(passenger);
+    }
+
+    public Floor getCurrentFloor() {
+        return floors.get(currentFloor);
     }
 
     public List<Passenger> getPassengers() {

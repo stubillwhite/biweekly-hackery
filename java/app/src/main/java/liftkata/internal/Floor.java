@@ -6,8 +6,9 @@ import java.util.List;
 
 public class Floor {
 
-    private final List<Passenger> passengers = Lists.newArrayList();
     private final int floorNumber;
+    private final List<Passenger> waitingPassengers = Lists.newArrayList();
+    private final List<Passenger> arrivedPassengers = Lists.newArrayList();
 
     private Elevator elevator;
 
@@ -19,8 +20,12 @@ public class Floor {
         this.elevator = elevator;
     }
 
-    public List<Passenger> getPassengers() {
-        return passengers;
+    public List<Passenger> getWaitingPassengers() {
+        return waitingPassengers;
+    }
+
+    public List<Passenger> getArrivedPassengers() {
+        return arrivedPassengers;
     }
 
     public int getFloorNumber() {
@@ -29,7 +34,7 @@ public class Floor {
 
     public boolean elevatorHasArrived() {
         return elevator.getCurrentState() == Elevator.State.WAITING
-                && elevator.getCurrentFloor() == floorNumber;
+                && elevator.getCurrentFloor().getFloorNumber() == floorNumber;
     }
 
     public Elevator getElevator() {

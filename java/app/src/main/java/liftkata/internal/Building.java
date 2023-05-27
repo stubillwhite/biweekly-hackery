@@ -25,9 +25,13 @@ public class Building implements Stateful {
     @Override
     public void updateState() {
         elevator.updateState();
+
+        final List<Passenger> elevatorPassengersToUpdate = Lists.newArrayList(elevator.getPassengers());
+        elevatorPassengersToUpdate.forEach(passenger -> passenger.updateState());
+
         floors.forEach(floor -> {
-            final List<Passenger> passengersOnFloor = Lists.newArrayList(floor.getPassengers());
-            passengersOnFloor.forEach(passenger -> passenger.updateState());
+            final List<Passenger> floorPassengersToUpdate = Lists.newArrayList(floor.getWaitingPassengers());
+            floorPassengersToUpdate.forEach(passenger -> passenger.updateState());
         });
     }
 }

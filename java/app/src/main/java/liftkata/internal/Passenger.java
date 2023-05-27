@@ -5,8 +5,11 @@ public class Passenger implements Stateful {
     private enum State {
         CALLING_ELEVATOR,
         WAITING_FOR_ELEVATOR,
-        RIDING_ELEVATOR
-    };
+        RIDING_ELEVATOR,
+        ARRIVED_AT_DESTINATION
+    }
+
+    ;
 
     private final String id;
     private final int destination;
@@ -49,16 +52,29 @@ public class Passenger implements Stateful {
                 if (currentFloor.elevatorHasArrived()) {
                     currentElevator = currentFloor.getElevator();
 
-                    currentFloor.getPassengers().remove(this);
+                    currentFloor.getWaitingPassengers().remove(this);
+                    currentElevator.board(this);
                     currentFloor = null;
 
-                    currentElevator.board(this);
                     currentElevator.callToFloor(destination);
                     currentState = State.RIDING_ELEVATOR;
                 }
                 break;
 
             case RIDING_ELEVATOR:
+                if (currentElevator.getCurrentFloor().getFloorNumber() == destination &&
+                        currentElevator.getCurrentState() == Elevator.State.WAITING) {
+                    currentFloor = currentElevator.getCurrentFloor();
+
+                    currentElevator.leave(this);
+                    currentFloor.getArrivedPassengers().add(this);
+                    currentElevator = null;
+
+                    currentState = State.ARRIVED_AT_DESTINATION;
+                }
+                break;
+
+            case ARRIVED_AT_DESTINATION:
                 break;
         }
     }

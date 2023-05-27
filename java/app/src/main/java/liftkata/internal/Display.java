@@ -22,7 +22,7 @@ public class Display {
             display(elevator, floor);
         }
 
-        System.out.printf("\033[%dA", building.getFloors().size() * 4 + 3);
+        System.out.printf("\033[%dA", building.getFloors().size() * 3);
     }
 
     private void display(Elevator elevator, Floor floor) {
@@ -31,24 +31,27 @@ public class Display {
 
         final String waitingFormatStr = String.format("%%-%ds", FLOOR_WIDTH);
         final String liftFormatStr = String.format("%%-%ds", LIFT_WIDTH - 2);
+        final String arrivedFormatStr = String.format("%%%ds", FLOOR_WIDTH);
 
-        final String waiting = String.format(waitingFormatStr, passengersToString(floor.getPassengers()));
+        final String waiting = String.format(waitingFormatStr, passengersToString(floor.getWaitingPassengers()));
         final String travelling = String.format(liftFormatStr, passengersToString(elevator.getPassengers()));
+        final String arrived = String.format(arrivedFormatStr, passengersToString(floor.getArrivedPassengers()));
 
-        final String liftTopOrSpace = (elevator.getCurrentFloor() == floorNumber) ?
+        final int elevatorFloorNumber = elevator.getCurrentFloor().getFloorNumber();
+        final String liftTopOrSpace = (elevatorFloorNumber == floorNumber) ?
                 "╔" + Strings.repeat("═", LIFT_WIDTH - 2) + "╗" :
                 Strings.repeat(" ", LIFT_WIDTH);
 
-        final String liftPassengersOrSpace = (elevator.getCurrentFloor() == floorNumber) ?
+        final String liftPassengersOrSpace = (elevatorFloorNumber == floorNumber) ?
                 "║" + travelling + "║" :
                 Strings.repeat(" ", LIFT_WIDTH);
 
-        final String liftBottomOrFloor = (elevator.getCurrentFloor() == floorNumber) ?
+        final String liftBottomOrFloor = (elevatorFloorNumber == floorNumber) ?
                 "╚" + Strings.repeat("═", LIFT_WIDTH - 2) + "╝" :
                 Strings.repeat("─", LIFT_WIDTH);
 
         System.out.printf("%d  %s%s%s\n", floorNumber, SPACE, liftTopOrSpace, SPACE);
-        System.out.printf("   %s%s%s\n", waiting, liftPassengersOrSpace, SPACE);
+        System.out.printf("   %s%s%s\n", waiting, liftPassengersOrSpace, arrived);
         System.out.printf("   %s%s%s\n", CEILING, liftBottomOrFloor, CEILING);
     }
 
@@ -61,5 +64,4 @@ public class Display {
     private String passengerToString(Passenger passenger) {
         return String.format("%s%d", passenger.getId(), passenger.getDestinationFloorNumber());
     }
-
 }
