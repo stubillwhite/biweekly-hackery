@@ -3,6 +3,7 @@ package liftkata.internal;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,15 +15,15 @@ public class Display {
     private static final String CEILING = Strings.repeat("─", FLOOR_WIDTH);
     private static final String SPACE = Strings.repeat(" ", FLOOR_WIDTH);
 
-    public void display(Building building) {
-        final List<Floor> floors = Lists.reverse(Lists.newArrayList(building.getFloors()));
-        final Elevator elevator = building.getElevator();
+    public void display(Simulation simulation) {
+        final List<Floor> floors = Lists.reverse(Lists.newArrayList(simulation.getFloors()));
+        final Elevator elevator = simulation.getElevator();
 
         for (Floor floor : floors) {
             display(elevator, floor);
         }
 
-        System.out.printf("\033[%dA", building.getFloors().size() * 3);
+        System.out.printf("\033[%dA", simulation.getFloors().size() * 3);
     }
 
     private void display(Elevator elevator, Floor floor) {

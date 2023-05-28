@@ -9,8 +9,6 @@ public class Passenger implements Stateful {
         ARRIVED_AT_DESTINATION
     }
 
-    ;
-
     private final String id;
     private final int destination;
 
@@ -28,10 +26,6 @@ public class Passenger implements Stateful {
         return id;
     }
 
-    public Floor getCurrentFloor() {
-        return currentFloor;
-    }
-
     public void setCurrentFloor(Floor currentFloor) {
         this.currentFloor = currentFloor;
     }
@@ -44,30 +38,26 @@ public class Passenger implements Stateful {
     public void updateState() {
         switch (currentState) {
             case CALLING_ELEVATOR:
-                currentFloor.getElevator().callToFloor(currentFloor.getFloorNumber());
+                currentFloor.callElevator();
                 currentState = State.WAITING_FOR_ELEVATOR;
                 break;
 
             case WAITING_FOR_ELEVATOR:
                 if (currentFloor.elevatorHasArrived()) {
-                    currentElevator = currentFloor.getElevator();
+                    currentElevator = currentFloor.boardElevator(this);
+                    currentElevator.addDestination(destination);
 
-                    currentFloor.getWaitingPassengers().remove(this);
-                    currentElevator.board(this);
                     currentFloor = null;
 
-                    currentElevator.callToFloor(destination);
                     currentState = State.RIDING_ELEVATOR;
                 }
                 break;
 
             case RIDING_ELEVATOR:
-                if (currentElevator.getCurrentFloor().getFloorNumber() == destination &&
-                        currentElevator.getCurrentState() == Elevator.State.WAITING) {
-                    currentFloor = currentElevator.getCurrentFloor();
+                if (currentElevator.hasArrivedAt(destination)) {
+                    currentFloor = currentElevator.leave(this);
+                    currentFloor.arriveAtDestination(this);
 
-                    currentElevator.leave(this);
-                    currentFloor.getArrivedPassengers().add(this);
                     currentElevator = null;
 
                     currentState = State.ARRIVED_AT_DESTINATION;

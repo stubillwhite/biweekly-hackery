@@ -1,5 +1,6 @@
 package liftkata.internal;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 
@@ -15,26 +16,31 @@ public class Elevator implements Stateful {
     }
 
     private final List<Passenger> passengers = Lists.newArrayList();
+    private final Deque<Integer> destinationQueue = Queues.newArrayDeque();
+
     private final List<Floor> floors;
 
     private int currentFloor;
     private State currentState;
-    private Deque<Integer> destinationQueue = Queues.newArrayDeque();
 
     public Elevator(List<Floor> floors, int startingFloor) {
         this.currentState = State.WAITING;
         this.floors = floors;
         this.currentFloor = startingFloor;
-
-        floors.forEach(x -> x.setElevator(this));
     }
 
     public void board(Passenger passenger) {
         passengers.add(passenger);
     }
 
-    public void leave(Passenger passenger) {
+    public boolean hasArrivedAt(int destination) {
+        return (currentFloor == destination && currentState == State.WAITING);
+    }
+
+    public Floor leave(Passenger passenger) {
+        final Floor floor = floors.get(currentFloor);
         passengers.remove(passenger);
+        return floor;
     }
 
     public Floor getCurrentFloor() {
@@ -42,15 +48,11 @@ public class Elevator implements Stateful {
     }
 
     public List<Passenger> getPassengers() {
-        return passengers;
+        return ImmutableList.copyOf(passengers);
     }
 
-    public void callToFloor(int floorNumber) {
+    public void addDestination(int floorNumber) {
         destinationQueue.add(floorNumber);
-    }
-
-    public State getCurrentState() {
-        return currentState;
     }
 
     @Override
