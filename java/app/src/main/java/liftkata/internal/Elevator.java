@@ -2,10 +2,9 @@ package liftkata.internal;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
 
-import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 
 public class Elevator implements Stateful {
 
@@ -16,14 +15,17 @@ public class Elevator implements Stateful {
     }
 
     private final List<Passenger> passengers = Lists.newArrayList();
-    private final Deque<Integer> destinationQueue = Queues.newArrayDeque();
 
+    private final ElevatorDestinationController controller;
     private final List<Floor> floors;
 
     private int currentFloor;
     private State currentState;
 
-    public Elevator(List<Floor> floors, int startingFloor) {
+    public Elevator(ElevatorDestinationController controller, List<Floor> floors, int startingFloor) {
+        this.controller = controller;
+        controller.setCurrentFloor(startingFloor);
+
         this.currentState = State.WAITING;
         this.floors = floors;
         this.currentFloor = startingFloor;
@@ -52,42 +54,55 @@ public class Elevator implements Stateful {
     }
 
     public void addDestination(int floorNumber) {
-        destinationQueue.add(floorNumber);
+        controller.addDestination(floorNumber);
     }
 
     @Override
     public void updateState() {
-        updateCurrentState();
         updateCurrentFloor();
+        updateCurrentState();
     }
 
+    public State getState() {
+        return currentState;
+    }
+
+
     private void updateCurrentFloor() {
+    }
+
+    private void updateCurrentState() {
+        final Optional<Integer> nextDestination = controller.getNextDestination();
         switch (currentState) {
-            case GOING_UP:
-                currentFloor += 1;
+            case WAITING:
+                if (nextDestination.isPresent()) {
+                    final int currentDestination = nextDestination.get();
+
+                    if (currentFloor > currentDestination) {
+                        currentState = State.GOING_DOWN;
+                    } else if (currentFloor == currentDestination) {
+                        currentState = State.WAITING;
+                    } else {
+                        currentState = State.GOING_UP;
+                    }
+                }
                 break;
 
-            case WAITING:
+            case GOING_UP:
+                currentFloor += 1;
+                if (nextDestination.isPresent() && currentFloor == nextDestination.get()) {
+                    currentState = State.WAITING;
+                }
+                controller.setCurrentFloor(currentFloor);
                 break;
 
             case GOING_DOWN:
                 currentFloor -= 1;
+                if (nextDestination.isPresent() && currentFloor == nextDestination.get()) {
+                    currentState = State.WAITING;
+                }
+                controller.setCurrentFloor(currentFloor);
                 break;
-        }
-    }
-
-    private void updateCurrentState() {
-        if (!destinationQueue.isEmpty()) {
-            final Integer currentDestination = destinationQueue.peek();
-
-            if (currentFloor > currentDestination) {
-                currentState = State.GOING_DOWN;
-            } else if (currentFloor == currentDestination) {
-                currentState = State.WAITING;
-                destinationQueue.pop();
-            } else {
-                currentState = State.GOING_UP;
-            }
         }
     }
 }

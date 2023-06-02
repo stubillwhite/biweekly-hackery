@@ -25,8 +25,8 @@ public class Simulation implements Stateful {
         private Builder() {
         }
 
-        public Builder withElevator() {
-            elevator = new Elevator(floors, 0);
+        public Builder withElevator(ElevatorDestinationController controller) {
+            elevator = new Elevator(controller, floors, 0);
             return this;
         }
 
@@ -82,7 +82,7 @@ public class Simulation implements Stateful {
         final Stream<Stateful> elevatorPassengers = Lists.<Stateful>newArrayList(elevator.getPassengers()).stream();
         final Stream<Stateful> waitingPassengers = floors.stream().flatMap(floor -> Lists.newArrayList(floor.getWaitingPassengers()).stream());
 
-        Streams.concat(elevators, elevatorPassengers, waitingPassengers).forEach(Stateful::updateState);
+        Streams.concat(elevatorPassengers, waitingPassengers, elevators).forEach(Stateful::updateState);
     }
 
     public void run() {
