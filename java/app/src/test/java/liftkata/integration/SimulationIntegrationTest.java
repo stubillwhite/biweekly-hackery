@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SimulationIntegrationTest {
 
     @Test
-    public void renderGridGivenNoRoversThenReturnsStringRepresentingGrid() {
+    public void singlePassengerCallsLiftAndRidesToDestination() {
         // Given
         final ElevatorDestinationController controller = new FIFODestinationController();
         final Simulation simulation = Simulation.builder()
@@ -37,7 +37,7 @@ public class SimulationIntegrationTest {
 
         // Arrive at the floor
         simulation.updateState();
-        assertThat(controller.getNextDestination()).isEqualTo(Optional.empty());
+        assertElevatorNextDestinationIsEmpty(controller);
         assertElevatorCurrentFloorIs(simulation, 1);
         assertElevatorStateIs(simulation, State.WAITING);
         assertElevatorPassengerCountIs(simulation, 0);
@@ -52,7 +52,7 @@ public class SimulationIntegrationTest {
 
         // Lift arrives at destination
         simulation.updateState();
-        assertThat(controller.getNextDestination()).isEqualTo(Optional.empty());
+        assertElevatorNextDestinationIsEmpty(controller);
         assertElevatorCurrentFloorIs(simulation, 0);
         assertElevatorStateIs(simulation, State.WAITING);
 
@@ -60,6 +60,10 @@ public class SimulationIntegrationTest {
         simulation.updateState();
         assertElevatorPassengerCountIs(simulation, 0);
         assertArrivedPassengersOnFloorCountIs(simulation, 0, 1);
+    }
+
+    private static void assertElevatorNextDestinationIsEmpty(ElevatorDestinationController controller) {
+        assertThat(controller.getNextDestination()).isEqualTo(Optional.empty());
     }
 
     private static void assertElevatorNextDestinationIs(ElevatorDestinationController controller, int value) {
