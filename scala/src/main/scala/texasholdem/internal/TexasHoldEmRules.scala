@@ -89,18 +89,21 @@ object TexasHoldEmRules {
     game.copy(deck = newDeck, communityCards = newCommunityCards)
   }
 
-  private def displayState(game: Game): Unit = {
-    game.display.displayGame(game)
-  }
-
   private def placeholderForPlayerActionHandling(actionRound: ActionRound, game: Game): Game = {
     def getPlayerAction(playerId: PlayerId): Action = {
       val playerView = PlayerView(actionRound, game.holeCards(playerId), game.communityCards, game.playOrder, Map())
       game.playersById(playerId).getAction(playerView)
     }
 
-    displayState(game)
-    game.playOrder.map(getPlayerAction)
-    game
+    game.display.displayGame(game)
+
+    val newGame = game.playOrder
+      .foldLeft(game)((game, playerId) => {
+        val newActions = game.playerActions(playerId) ++ List(getPlayerAction(playerId))
+        game.copy(playerActions = game.playerActions + (playerId -> newActions))
+      })
+
+    newGame.display.displayLastPlayerActions(newGame)
+    newGame
   }
 }

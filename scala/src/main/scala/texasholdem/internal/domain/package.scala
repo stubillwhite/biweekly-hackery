@@ -29,7 +29,7 @@ package object domain {
   object Action {
     case object Fold extends Action
     case object Check extends Action
-    case object Bet extends Action
+    case class Bet(amount: Int) extends Action
     case object Call extends Action
     case class Raise(amount: Int) extends Action
   }
@@ -58,6 +58,7 @@ package object domain {
 
   trait Display {
     def displayGame(game: Game): Unit
+    def displayLastPlayerActions(game: Game): Unit
     def displayShowdown(playerHands: Map[PlayerId, PokerHand]): Unit
   }
 

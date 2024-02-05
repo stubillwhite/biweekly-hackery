@@ -27,6 +27,14 @@ class ConsoleDisplay extends Display {
     println()
   }
 
+  override def displayLastPlayerActions(game: Game): Unit = {
+    game.playOrder.foreach(playerId => {
+      println(s"""  ${playerId}: ${game.playerActions(playerId).last}""")
+    })
+
+    println()
+  }
+
   override def displayShowdown(playerHands: Map[PlayerId, PokerHand]): Unit = {
     println("Player hands:")
     playerHands.toList
