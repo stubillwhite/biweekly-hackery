@@ -1,5 +1,8 @@
 package mastermind.internal
 
+import mastermind.internal.domain.Color.Color
+import mastermind.internal.domain.KeyPegs.{FullyCorrect, PartiallyCorrect}
+
 package object domain {
 
   // Colors
@@ -11,7 +14,7 @@ package object domain {
 
   // Code
 
-  case class CodePeg(color: Color.Color)
+  case class CodePeg(color: Color)
 
   object CodePegs {
     val Red: CodePeg = CodePeg(Color.Red)
@@ -22,19 +25,19 @@ package object domain {
     val Black: CodePeg = CodePeg(Color.Black)
   }
 
-  private type Code = Seq[CodePeg]
+  type Code = Seq[CodePeg]
   def Code(codePegs: CodePeg*): Code = Seq(codePegs: _*)
 
   // Keys
 
-  case class KeyPeg(color: Color.Color)
+  case class KeyPeg(color: Color)
 
   object KeyPegs {
     val FullyCorrect: KeyPeg = KeyPeg(Color.Black)
     val PartiallyCorrect: KeyPeg = KeyPeg(Color.White)
   }
 
-  private type Feedback = Seq[KeyPeg]
+  type Feedback = Seq[KeyPeg]
   def Feedback(keyPegs: KeyPeg*): Feedback = Seq(keyPegs: _*)
 
   trait FeedbackCalculator {
@@ -53,6 +56,22 @@ package object domain {
 
   case class Game(codeMaker: CodeMaker,
                   codeBreaker: CodeBreaker,
+                  calculator: FeedbackCalculator,
                   code: Code,
-                  rounds: Seq[Round])
+                  rounds: Seq[Round]) {
+    
+    private val fullyCorrect = Feedback(List.fill(code.length)(FullyCorrect): _*)
+
+    def isWon(): Boolean = {
+      rounds.nonEmpty && rounds.last.feedback == fullyCorrect
+    }
+
+    def isLost(): Boolean = {
+      rounds.length == 10
+    }
+  }
+
+  trait Display {
+    def displayState(game: Game): Unit
+  }
 }
