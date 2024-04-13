@@ -1,0 +1,9 @@
+.idea/
+
+dist/
+htmlcov/
+
+*.pyc
+.coverage
+.dmypy.json
+.make-sentinel.*
