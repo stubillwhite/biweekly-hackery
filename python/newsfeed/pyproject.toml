@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "newsfeed"
+version = "0.1.0"
+description = ""
+authors = ["John Doe <johndoe@mail.com>"]
+readme = "README.md"
+
+[tool.poetry.scripts]
+run-app = "newsfeed.__main__:main"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+asyncio = "^3.4.3"
+requests = "^2.32.3"
+pydantic = "^2.7.4"
+pydantic-xml = "^2.11.0"
+pytest-asyncio = "^0.23.7"
+xmltodict = "^0.13.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+pytest-cov = "^5.0.0"
+coverage = "^7.4.4"
+pytest-mock = "^3.14.0"
+ruff = "^0.3.5"
+black = "^24.3.0"
+mypy = "^1.9.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+########################################
+# Testing
+########################################
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+########################################
+# Coverage
+########################################
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["newsfeed"]
+omit = ["__init__.py", "__main__.py"]
+
+########################################
+# Formatting
+########################################
+
+[tool.black]
+line-length = 120
+
+########################################
+# Linting
+########################################
+
+[tool.ruff]
+src = ['src']
+extend-exclude = ['tests']
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = [
+    "ANN",      # flake8-annotations for type annotations
+]
+extend-ignore = [
+    "ANN101",   # Missing type annotation for self in method
+    "ANN102",   # Missing type annotation for cls in classmethod
+    "ANN204",   # Missing return type annotation for special method
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = 'google'
+
+[tool.ruff.lint.isort]
+force-single-line = true
