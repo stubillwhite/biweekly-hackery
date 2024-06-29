@@ -1,30 +1,37 @@
+from typing import Optional, Any
+
 import requests
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import xmltodict
 
-import requests
-from pydantic import BaseModel, Field, AliasPath
-from requests import Response
-from requests.auth import HTTPBasicAuth
+from pydantic import Field, AliasPath, AliasChoices
 from pydantic_xml import BaseXmlModel, RootXmlModel, attr, element, wrapped
 
-
-class AtomFeedEntry(BaseXmlModel, extra="ignore"):
-    title: str
-    link: str
-    id: str
-    updated: datetime
-    summary: str
+from src.newsfeed.utils import extract
 
 
 class AtomFeed(BaseXmlModel, extra="ignore"):
-    title: str
-    link: str = Field(alias=AliasPath("link", 0, "@href")) # TODO: Should be self
-    updated: datetime
+    class Entry(BaseXmlModel, extra="ignore"):
+        id: str
+        title: str
+        updated: datetime
+        summary: Optional[str] = None
+
     id: str
-    # entry: list[AtomFeedEntry] = element(tag="entry")
+    title: str
+    updated: datetime
+    entries: list[Entry] = element(alias="entry", tag="entry")
+    link: Optional[str] = Field(alias="link_self")
+
+    @classmethod
+    def extract_nested_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
+        def self_links(xs: Optional[list[dict[str, Any]]]):
+            return [link for link in xs if link.get('@rel') == 'self'] if xs is not None else None
+
+        data["link_self"] = extract(data, ["link", self_links, 0, "@href"])
+        return data
 
 
 @dataclass
@@ -32,10 +39,10 @@ class Feed:
     _is_abstract = True
     url: str
 
-    # TODO: Take URL parameter here
-    def __init__(self):
+    def __init__(self, url: str):
         if self._is_abstract:
             raise RuntimeError("Abstract class instantiation.")
+        self.url = url
 
     def __init_subclass__(cls):
         cls._is_abstract = False
@@ -44,39 +51,43 @@ class Feed:
 @dataclass
 class DeadFeed(Feed):
     def __init__(self, url: str):
-        super().__init__()
-        self.url = url
+        super().__init__(url)
 
 
 @dataclass
 class LiveFeed(Feed):
-    title: str
-    id: str
-    updated: datetime
+    @dataclass
+    class Entry:
+        id: str
+        title: str
+        updated: datetime
+        summary: Optional[str]
 
-    def __init__(self,
-                 url: str,
-                 title: str,
-                 id: str,
-                 updated: datetime):
-        super().__init__()
-        self.url = url
+    id: str
+    title: str
+    updated: datetime
+    entries: list[Entry]
+
+    def __init__(self, url: str, title: str, id: str, updated: datetime, entries: list[Entry]):
+        super().__init__(url)
         self.title = title
         self.id = id
         self.updated = updated
+        self.entries = entries
 
     @classmethod
-    def from_atom_feed(cls, feed: AtomFeed) -> Feed:
-        return LiveFeed("feed.link", feed.title, feed.id, feed.updated)
+    def from_atom_feed(cls, url: str, feed: AtomFeed) -> Feed:
+        entries = [cls.Entry(e.id, e.title, e.updated, e.summary) for e in feed.entries]
+        return LiveFeed(url, feed.title, feed.id, feed.updated, entries)
 
 
 async def get_feed(url: str) -> Feed:
     try:
         response = await asyncio.to_thread(requests.get, url)
         data = xmltodict.parse(response.content)
-        print(data["feed"]["link"])
-        feed = AtomFeed.model_validate(data["feed"])
-        return LiveFeed.from_atom_feed(feed)
+        extracted = AtomFeed.extract_nested_fields(data["feed"])
+        feed = AtomFeed.model_validate(extracted)
+        return LiveFeed.from_atom_feed(url, feed)
     except Exception as e:
         print(e)
         return DeadFeed(url)
