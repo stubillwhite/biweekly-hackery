@@ -1,7 +1,7 @@
+from typing import cast
 from unittest.mock import patch, Mock
 
-from newsfeed.app import get_feed
-from newsfeed.feed import LiveFeed
+from newsfeed.feed import parse_url, AtomFeed, RSS2Feed
 
 
 def strip_margin(s: str) -> str:
@@ -11,7 +11,7 @@ def strip_margin(s: str) -> str:
     return "\n".join(stripped)
 
 
-async def test_get_feed():
+async def test_parse_url_given_atom_feed_then_returns_atom():
     # Given
     url = "stub-url"
     content = strip_margin(
@@ -43,9 +43,54 @@ async def test_get_feed():
 
     with patch("requests.get", return_value=stub_response):
         # When
-        actual = await get_feed(url)
+        actual = await parse_url(url)
 
         # Then
-        assert isinstance(actual, LiveFeed)
-        assert actual.title == "feed-title"
-        assert actual.url == url
+        assert isinstance(actual, AtomFeed)
+        atom_feed = cast(AtomFeed, actual)
+        assert atom_feed.title == "feed-title"
+
+
+async def test_parse_url_given_rss2_feed_then_returns_rss2():
+    # Given
+    content = strip_margin(
+        f"""<rss version="2.0">
+           |    <channel>
+           |        <title>feed-title</title>
+           |        <link>feed-link</link>
+           |        <description>feed-description</description>
+           |    </channel>
+           |</rss>
+           |"""
+    )
+
+    stub_response = Mock()
+    stub_response.content = content
+
+    with patch("requests.get", return_value=stub_response):
+        # When
+        actual = await parse_url("stub-url")
+
+        # Then
+        assert isinstance(actual, RSS2Feed)
+        rss2_feed = cast(RSS2Feed, actual)
+        assert rss2_feed.title == "feed-title"
+        assert rss2_feed.link == "feed-link"
+
+
+async def test_parse_url_given_invalid_feed_then_returns_dead_feed():
+    # Given
+    content = strip_margin(
+        f"""<html>This is not a feed</html>
+           |"""
+    )
+
+    stub_response = Mock()
+    stub_response.content = content
+
+    with patch("requests.get", return_value=stub_response):
+        # When
+        actual = await parse_url("stub-url")
+
+        # Then
+        assert actual is None

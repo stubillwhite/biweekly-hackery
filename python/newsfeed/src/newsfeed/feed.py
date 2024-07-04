@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, cast
 
 import requests
 import asyncio
@@ -12,25 +12,33 @@ from pydantic_xml import BaseXmlModel, RootXmlModel, attr, element, wrapped
 from src.newsfeed.utils import extract
 
 
+class RSS2Feed(BaseXmlModel, extra="ignore"):
+    title: str
+    link: str
+    description: str
+
+    @classmethod
+    def extract_nested_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
+        return data
+
 class AtomFeed(BaseXmlModel, extra="ignore"):
     class Entry(BaseXmlModel, extra="ignore"):
         id: str
         title: str
         updated: datetime
-        summary: Optional[str] = None
 
     id: str
     title: str
     updated: datetime
     entries: list[Entry] = element(alias="entry", tag="entry")
-    link: Optional[str] = Field(alias="link_self")
+    link: Optional[str] = Field(alias="extracted_link_self")
 
     @classmethod
     def extract_nested_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
         def self_links(xs: Optional[list[dict[str, Any]]]):
             return [link for link in xs if link.get('@rel') == 'self'] if xs is not None else None
 
-        data["link_self"] = extract(data, ["link", self_links, 0, "@href"])
+        data["extracted_link_self"] = extract(data, ["link", self_links, 0, "@href"])
         return data
 
 
@@ -61,7 +69,6 @@ class LiveFeed(Feed):
         id: str
         title: str
         updated: datetime
-        summary: Optional[str]
 
     id: str
     title: str
@@ -77,17 +84,61 @@ class LiveFeed(Feed):
 
     @classmethod
     def from_atom_feed(cls, url: str, feed: AtomFeed) -> Feed:
-        entries = [cls.Entry(e.id, e.title, e.updated, e.summary) for e in feed.entries]
+        entries = [cls.Entry(e.id, e.title, e.updated) for e in feed.entries]
+        return LiveFeed(url, feed.title, feed.id, feed.updated, entries)
+
+    @classmethod
+    def from_rss2_feed(cls, url: str, feed: RSS2Feed) -> Feed:
+        entries = [cls.Entry(e.id, e.title, e.updated) for e in feed.entries]
         return LiveFeed(url, feed.title, feed.id, feed.updated, entries)
 
 
 async def get_feed(url: str) -> Feed:
     try:
-        response = await asyncio.to_thread(requests.get, url)
-        data = xmltodict.parse(response.content)
-        extracted = AtomFeed.extract_nested_fields(data["feed"])
-        feed = AtomFeed.model_validate(extracted)
-        return LiveFeed.from_atom_feed(url, feed)
+        feed = parse_url(url)
+        match feed:
+            case AtomFeed():
+                return LiveFeed.from_atom_feed(url, cast(AtomFeed, feed))
+            case RSS2Feed():
+                return LiveFeed.from_rss2_feed(url, cast(RSS2Feed, feed))
+            case None:
+                return await parse_as_dead(url, )
     except Exception as e:
         print(e)
         return DeadFeed(url)
+
+
+async def parse_url(url: str) -> AtomFeed | RSS2Feed | None:
+    parsers = [parse_as_atom, parse_as_rss2]
+    try:
+        response = await asyncio.to_thread(requests.get, url, params={})
+        data = xmltodict.parse(response.content)
+        feed = (parser(url, data) for parser in parsers)
+        return next((f for f in feed if f is not None), None)
+    except Exception as e:
+        print(e)
+        return None
+
+
+def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
+    try:
+        print("Attempting to parse as Atom")
+        extracted = AtomFeed.extract_nested_fields(data["feed"])
+        return AtomFeed.model_validate(extracted)
+    except Exception as e:  # TODO: Tighten exception type
+        print(e)
+        return None
+
+def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
+    try:
+        print("Attempting to parse as RSS 2.0")
+        extracted = RSS2Feed.extract_nested_fields(data["rss"]["channel"])
+        return RSS2Feed.model_validate(extracted)
+    except Exception as e:  # TODO: Tighten exception type
+        print(e)
+        return None
+
+
+async def parse_as_dead(url: str, _: dict[Any, Any]) -> DeadFeed:
+    print("Attempting to parse as Dead")
+    return DeadFeed(url)

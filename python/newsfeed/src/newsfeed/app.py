@@ -11,16 +11,14 @@ async def app() -> None:
         match feed:
             case LiveFeed():
                 live_feed: LiveFeed = cast(LiveFeed, feed)
-                print(live_feed.title)
-                print(live_feed.url)
+                print(f"{live_feed.title} ({live_feed.url})")
                 for entry in live_feed.entries:
-                    print(f"    {entry.updated}")
-                    print(f"    {entry.title}")
-                    print(f"    {entry.summary}")
-                    print()
+                    print(f"    {entry.updated} {entry.title}")
 
             case DeadFeed():
                 print(feed)
+
+        print()
 
 
 def main() -> None:
