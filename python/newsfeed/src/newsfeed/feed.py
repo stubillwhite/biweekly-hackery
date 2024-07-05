@@ -1,25 +1,50 @@
-from typing import Optional, Any, cast
+import asyncio
+import logging
+from datetime import datetime
+from typing import Optional, Any
 
 import requests
-import asyncio
-from dataclasses import dataclass
-from datetime import datetime
 import xmltodict
-
-from pydantic import Field, AliasPath, AliasChoices
-from pydantic_xml import BaseXmlModel, RootXmlModel, attr, element, wrapped
+from pydantic import Field
+from pydantic_xml import BaseXmlModel, element
 
 from src.newsfeed.utils import extract
 
+logger = logging.getLogger(__name__)
+
 
 class RSS2Feed(BaseXmlModel, extra="ignore"):
+
+    class Item(BaseXmlModel, extra="ignore"):
+        title: Optional[str]
+        link: Optional[str]
+        description: Optional[str]
+
     title: str
     link: str
     description: str
+    items: list[Item] = element(alias="item", tag="item")
 
     @classmethod
-    def extract_nested_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
+    def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
         return data
+
+
+class UnparsableFeed(BaseXmlModel, extra="ignore"):
+    pass
+
+    @classmethod
+    def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
+        return data
+
+
+class UnfetchableFeed(BaseXmlModel, extra="ignore"):
+    pass
+
+    @classmethod
+    def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
+        return data
+
 
 class AtomFeed(BaseXmlModel, extra="ignore"):
     class Entry(BaseXmlModel, extra="ignore"):
@@ -34,7 +59,7 @@ class AtomFeed(BaseXmlModel, extra="ignore"):
     link: Optional[str] = Field(alias="extracted_link_self")
 
     @classmethod
-    def extract_nested_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
+    def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
         def self_links(xs: Optional[list[dict[str, Any]]]):
             return [link for link in xs if link.get('@rel') == 'self'] if xs is not None else None
 
@@ -42,103 +67,43 @@ class AtomFeed(BaseXmlModel, extra="ignore"):
         return data
 
 
-@dataclass
-class Feed:
-    _is_abstract = True
-    url: str
-
-    def __init__(self, url: str):
-        if self._is_abstract:
-            raise RuntimeError("Abstract class instantiation.")
-        self.url = url
-
-    def __init_subclass__(cls):
-        cls._is_abstract = False
-
-
-@dataclass
-class DeadFeed(Feed):
-    def __init__(self, url: str):
-        super().__init__(url)
-
-
-@dataclass
-class LiveFeed(Feed):
-    @dataclass
-    class Entry:
-        id: str
-        title: str
-        updated: datetime
-
-    id: str
-    title: str
-    updated: datetime
-    entries: list[Entry]
-
-    def __init__(self, url: str, title: str, id: str, updated: datetime, entries: list[Entry]):
-        super().__init__(url)
-        self.title = title
-        self.id = id
-        self.updated = updated
-        self.entries = entries
-
-    @classmethod
-    def from_atom_feed(cls, url: str, feed: AtomFeed) -> Feed:
-        entries = [cls.Entry(e.id, e.title, e.updated) for e in feed.entries]
-        return LiveFeed(url, feed.title, feed.id, feed.updated, entries)
-
-    @classmethod
-    def from_rss2_feed(cls, url: str, feed: RSS2Feed) -> Feed:
-        entries = [cls.Entry(e.id, e.title, e.updated) for e in feed.entries]
-        return LiveFeed(url, feed.title, feed.id, feed.updated, entries)
-
-
-async def get_feed(url: str) -> Feed:
-    try:
-        feed = parse_url(url)
-        match feed:
-            case AtomFeed():
-                return LiveFeed.from_atom_feed(url, cast(AtomFeed, feed))
-            case RSS2Feed():
-                return LiveFeed.from_rss2_feed(url, cast(RSS2Feed, feed))
-            case None:
-                return await parse_as_dead(url, )
-    except Exception as e:
-        print(e)
-        return DeadFeed(url)
-
-
-async def parse_url(url: str) -> AtomFeed | RSS2Feed | None:
-    parsers = [parse_as_atom, parse_as_rss2]
+async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | UnfetchableFeed:
+    parsers = [parse_as_atom, parse_as_rss2, parse_as_unparsable]
     try:
         response = await asyncio.to_thread(requests.get, url, params={})
         data = xmltodict.parse(response.content)
         feed = (parser(url, data) for parser in parsers)
-        return next((f for f in feed if f is not None), None)
+        return next(f for f in feed if f is not None)
     except Exception as e:
-        print(e)
-        return None
+        logger.debug("Failed to retrieve feed")
+        return parse_as_unfetchable(url, {})
 
 
 def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
     try:
-        print("Attempting to parse as Atom")
-        extracted = AtomFeed.extract_nested_fields(data["feed"])
+        logger.debug("Attempting to parse as Atom")
+        extracted = AtomFeed.extract_complex_fields(data["feed"])
         return AtomFeed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        print(e)
+        logger.debug(f"Failed to parse as Atom", e, exc_info=True)
         return None
+
 
 def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
     try:
-        print("Attempting to parse as RSS 2.0")
-        extracted = RSS2Feed.extract_nested_fields(data["rss"]["channel"])
+        logger.debug("Attempting to parse as RSS 2.0")
+        extracted = RSS2Feed.extract_complex_fields(data["rss"]["channel"])
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        print(e)
+        logger.debug(f"Failed to parse as RSS 2.0", e, exc_info=True)
         return None
 
 
-async def parse_as_dead(url: str, _: dict[Any, Any]) -> DeadFeed:
-    print("Attempting to parse as Dead")
-    return DeadFeed(url)
+def parse_as_unparsable(url: str, data: dict[Any, Any]) -> UnparsableFeed:
+    logger.debug("Treating as unparsable")
+    return UnparsableFeed()
+
+
+def parse_as_unfetchable(url: str, data: dict[Any, Any]) -> UnfetchableFeed:
+    logger.debug("Treating as unfetchable")
+    return UnfetchableFeed()

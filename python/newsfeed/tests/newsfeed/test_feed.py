@@ -1,7 +1,7 @@
 from typing import cast
 from unittest.mock import patch, Mock
 
-from newsfeed.feed import parse_url, AtomFeed, RSS2Feed
+from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed
 
 
 def strip_margin(s: str) -> str:
@@ -11,7 +11,7 @@ def strip_margin(s: str) -> str:
     return "\n".join(stripped)
 
 
-async def test_parse_url_given_atom_feed_then_returns_atom():
+async def test_parse_feed_given_atom_feed_then_returns_atom():
     # Given
     url = "stub-url"
     content = strip_margin(
@@ -43,7 +43,7 @@ async def test_parse_url_given_atom_feed_then_returns_atom():
 
     with patch("requests.get", return_value=stub_response):
         # When
-        actual = await parse_url(url)
+        actual = await parse_feed(url)
 
         # Then
         assert isinstance(actual, AtomFeed)
@@ -51,7 +51,7 @@ async def test_parse_url_given_atom_feed_then_returns_atom():
         assert atom_feed.title == "feed-title"
 
 
-async def test_parse_url_given_rss2_feed_then_returns_rss2():
+async def test_parse_feed_given_rss2_feed_then_returns_rss2():
     # Given
     content = strip_margin(
         f"""<rss version="2.0">
@@ -69,7 +69,7 @@ async def test_parse_url_given_rss2_feed_then_returns_rss2():
 
     with patch("requests.get", return_value=stub_response):
         # When
-        actual = await parse_url("stub-url")
+        actual = await parse_feed("stub-url")
 
         # Then
         assert isinstance(actual, RSS2Feed)
@@ -78,7 +78,7 @@ async def test_parse_url_given_rss2_feed_then_returns_rss2():
         assert rss2_feed.link == "feed-link"
 
 
-async def test_parse_url_given_invalid_feed_then_returns_dead_feed():
+async def test_parse_feed_given_invalid_feed_content_then_returns_unparsable_feed():
     # Given
     content = strip_margin(
         f"""<html>This is not a feed</html>
@@ -90,7 +90,7 @@ async def test_parse_url_given_invalid_feed_then_returns_dead_feed():
 
     with patch("requests.get", return_value=stub_response):
         # When
-        actual = await parse_url("stub-url")
+        actual = await parse_feed("stub-url")
 
         # Then
-        assert actual is None
+        assert isinstance(actual, UnparsableFeed)
