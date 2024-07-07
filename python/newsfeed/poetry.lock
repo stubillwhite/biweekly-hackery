@@ -204,6 +204,17 @@ files = [
 ]
 
 [[package]]
+name = "colored"
+version = "2.2.4"
+description = "Simple python library for color and formatting to terminal"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "colored-2.2.4-py3-none-any.whl", hash = "sha256:a7069673bd90a35f46cb748d012c17284a0668d2f1c06bc7a51822a2d5ad2112"},
+    {file = "colored-2.2.4.tar.gz", hash = "sha256:595e1dd7f3b472ea5f12af21d2fec8a2ea2cf8f9d93e67180197330b26df9b61"},
+]
+
+[[package]]
 name = "coverage"
 version = "7.5.3"
 description = "Code coverage measurement for Python"
@@ -715,4 +726,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4938b3098a00ee0733a97a0e68d1a43a2e1d4fddd8e213540ef64eac79065c45"
+content-hash = "5529ce60a29ca6b11e6d35dab2026985772b551275133a8490775810d2e2c94c"

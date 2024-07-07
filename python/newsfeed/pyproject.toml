@@ -7,6 +7,7 @@ readme = "README.md"
 
 [tool.poetry.scripts]
 run-app = "newsfeed.__main__:main"
+check = "newsfeed.__main__:check"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -18,6 +19,8 @@ pytest-asyncio = "^0.23.7"
 xmltodict = "^0.13.0"
 types-requests = "^2.32.0.20240622"
 types-xmltodict = "^0.13.0.3"
+click = "^8.1.7"
+colored = "^2.2.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
