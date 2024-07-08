@@ -7,3 +7,5 @@ htmlcov/
 .coverage
 .dmypy.json
 .make-sentinel.*
+
+newsfeed.log

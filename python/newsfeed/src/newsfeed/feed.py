@@ -122,6 +122,7 @@ def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
         logger.debug(f"Failed to parse as RSS 2.0", exc_info=e)
+        logger.debug(f"Failed to parse as RSS 2.0", exc_info=e)
         return None
 
 
