@@ -52,7 +52,7 @@ async def run_check_subscriptions() -> None:
         match blog:
             case LiveBlog() as live_blog:
                 count['live'] = count.get('live', 0) + 1
-                print(f"{Fore.green}Live{Style.reset}: {live_blog.url}")
+                print(f"{Fore.green}Live{Style.reset}: {live_blog.format} {live_blog.url}")
 
             case DeadBlog() as dead_blog:
                 count[dead_blog.reason] = count.get(dead_blog.reason, 0) + 1

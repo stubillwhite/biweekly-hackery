@@ -1,10 +1,14 @@
 import asyncio
 import logging
+import ssl
 from datetime import datetime
 from typing import Optional, Any
 
+import aiohttp
+import certifi
 import requests
 import xmltodict
+from aiohttp import ClientSession, TCPConnector
 from pydantic import Field
 from pydantic_xml import BaseXmlModel, element
 from requests import ReadTimeout
@@ -78,20 +82,26 @@ class AtomFeed(BaseXmlModel, extra="ignore"):
 async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | UnfetchableFeed:
     parsers = [parse_as_atom, parse_as_rss2, parse_as_unparsable]
 
-    def get():
-        return requests.get(url, timeout=2)
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+
 
     try:
-        response = await asyncio.to_thread(get)
-        data = xmltodict.parse(response.content)
-        feed = (parser(url, data) for parser in parsers)
-        return next(f for f in feed if f is not None)
+        async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env = True) as session:
+            async with session.get(url, timeout=5) as response:
+                # print("Status:", response.status)
+                # print("Content-type:", response.headers['content-type'])
+
+                content = await response.text()
+                data = xmltodict.parse(content)
+                feed = (parser(url, data) for parser in parsers)
+                return next(f for f in feed if f is not None)
     except ReadTimeout as e:
         logger.debug("Failed to retrieve feed before timeout", exc_info=e)
         return parse_as_unreadable(url, {})
 
     except Exception as e:
         logger.debug("Failed to retrieve feed", exc_info=e)
+        print(e)
         return parse_as_unfetchable(url, {})
 
 

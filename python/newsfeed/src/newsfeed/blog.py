@@ -25,19 +25,20 @@ class DeadBlog(Blog):
 
 @dataclass
 class LiveBlog(Blog):
-    def __init__(self, url: str, items: list[Blog.Item]):
+    def __init__(self, url: str, format: str, items: list[Blog.Item]):
         self.url = url
+        self.format = format
         self.items = items
 
 
 def from_atom_feed(url: str, feed: AtomFeed) -> LiveBlog:
     items = [Blog.Item(e.title) for e in feed.entries]
-    return LiveBlog(url, items)
+    return LiveBlog(url, 'atom', items)
 
 
 def from_rss2_feed(url: str, feed: RSS2Feed) -> LiveBlog:
     items = [Blog.Item(e.title) for e in feed.items]
-    return LiveBlog(url, items)
+    return LiveBlog(url, 'rss-2.0', items)
 
 
 async def get_blog(url: str) -> LiveBlog | DeadBlog:
