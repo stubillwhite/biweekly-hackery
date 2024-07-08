@@ -12,7 +12,6 @@ check = "newsfeed.__main__:check"
 [tool.poetry.dependencies]
 python = "^3.12"
 asyncio = "^3.4.3"
-requests = "^2.32.3"
 pydantic = "^2.7.4"
 pydantic-xml = "^2.11.0"
 pytest-asyncio = "^0.23.7"
@@ -22,6 +21,7 @@ types-xmltodict = "^0.13.0.3"
 click = "^8.1.7"
 colored = "^2.2.4"
 aiohttp = "^3.9.5"
+certifi = "^2024.7.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"

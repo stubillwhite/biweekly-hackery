@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import ssl
 from datetime import datetime
@@ -6,12 +5,10 @@ from typing import Optional, Any
 
 import aiohttp
 import certifi
-import requests
 import xmltodict
-from aiohttp import ClientSession, TCPConnector
+from aiohttp import TCPConnector
 from pydantic import Field
 from pydantic_xml import BaseXmlModel, element
-from requests import ReadTimeout
 
 from src.newsfeed.utils import extract
 
@@ -20,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 class RSS2Feed(BaseXmlModel, extra="ignore"):
     class Item(BaseXmlModel, extra="ignore"):
-        title: Optional[str]
-        link: Optional[str]
-        description: Optional[str]
+        title: Optional[str] = None
+        link: Optional[str] = None
+        description: Optional[str] = None
 
     title: str
     link: str
@@ -84,57 +81,54 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
 
     ssl_context = ssl.create_default_context(cafile=certifi.where())
 
-
     try:
+        logger.info(f"Attempting to retrieve '{url}'")
         async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env = True) as session:
             async with session.get(url, timeout=5) as response:
-                # print("Status:", response.status)
-                # print("Content-type:", response.headers['content-type'])
+                logger.info(f"Status code: {response.status}")
 
                 content = await response.text()
                 data = xmltodict.parse(content)
                 feed = (parser(url, data) for parser in parsers)
                 return next(f for f in feed if f is not None)
-    except ReadTimeout as e:
-        logger.debug("Failed to retrieve feed before timeout", exc_info=e)
-        return parse_as_unreadable(url, {})
+    # except ReadTimeout as e:
+    #     logger.debug("Failed to retrieve feed before timeout", exc_info=e)
+    #     return parse_as_unreadable(url, {})
 
     except Exception as e:
-        logger.debug("Failed to retrieve feed", exc_info=e)
-        print(e)
+        logger.info("Failed to retrieve feed", exc_info=e)
         return parse_as_unfetchable(url, {})
 
 
 def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
     try:
-        logger.debug("Attempting to parse as Atom")
-        extracted = AtomFeed.extract_complex_fields(data["feed"])
+        extracted = AtomFeed.extract_complex_fields(data['feed'])
         return AtomFeed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        logger.debug(f"Failed to parse as Atom", exc_info=e)
+        logger.debug(f"Failed to parse as Atom with errors:", exc_info=e)
+        logger.info(f"Failed to parse as Atom")
         return None
 
 
 def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
     try:
-        logger.debug("Attempting to parse as RSS 2.0")
         extracted = RSS2Feed.extract_complex_fields(data["rss"]["channel"])
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        logger.debug(f"Failed to parse as RSS 2.0", exc_info=e)
-        logger.debug(f"Failed to parse as RSS 2.0", exc_info=e)
+        logger.debug(f"Failed to parse as RSS 2.0 with errors:", exc_info=e)
+        logger.info(f"Failed to parse as RSS 2.0")
         return None
 
 
 def parse_as_unparsable(url: str, data: dict[Any, Any]) -> UnparsableFeed:
-    logger.debug("Treating as unparsable")
+    logger.info("Treating as unparsable")
     return UnparsableFeed()
 
 
 def parse_as_unfetchable(url: str, data: dict[Any, Any]) -> UnfetchableFeed:
-    logger.debug("Treating as unfetchable")
+    logger.info("Treating as unfetchable")
     return UnfetchableFeed()
 
 def parse_as_unreadable(url: str, data: dict[Any, Any]) -> UnreadableFeed:
-    logger.debug("Treating as unreadable")
+    logger.info("Treating as unreadable")
     return UnreadableFeed()

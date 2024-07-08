@@ -3,22 +3,20 @@ import logging
 from pathlib import Path
 from typing import cast
 
-import xmltodict
-from colored import colored, Fore, Style
+from colored import Fore, Style
 
 from newsfeed.blog import get_blog, LiveBlog, DeadBlog
-from newsfeed.utils import flatten
 
 subscriptions = [
-    "http://www.martinfowler.com/bliki/bliki.atom",
+    # "http://www.martinfowler.com/bliki/bliki.atom",
     "https://scala.libhunt.com/newsletter/feed",
-    "https://blog.softwaremill.com/feed",
-    "http://googlescholar.blogspot.com/feeds/posts/default",
-    "http://multithreaded.stitchfix.com/feed.xml",
-    "http://techblog.netflix.com/feeds/posts/default",
-    "https://medium.com/feed/netflix-techblog",
-    "http://labs.spotify.com/feed/",
-    "https://blog.beachgeek.co.uk/index.xml",
+    # "https://blog.softwaremill.com/feed",
+    # "http://googlescholar.blogspot.com/feeds/posts/default",
+    # "http://multithreaded.stitchfix.com/feed.xml",
+    # "http://techblog.netflix.com/feeds/posts/default",
+    # "https://medium.com/feed/netflix-techblog",
+    # "http://labs.spotify.com/feed/",
+    # "https://blog.beachgeek.co.uk/index.xml",
 ]
 
 
@@ -63,7 +61,6 @@ async def run_check_subscriptions() -> None:
 
 def check_subscriptions() -> None:
     asyncio.run(run_check_subscriptions())
-    # run_check_subscriptions()
 
 
 def main() -> None:
@@ -72,6 +69,7 @@ def main() -> None:
 
 
 def read_blogs() -> list[str]:
+    # return subscriptions
     return Path(
         '/Users/stubillwhite/Dev/my-stuff/biweekly-hackery/python/newsfeed/feedly.opml').read_text().splitlines()
 
