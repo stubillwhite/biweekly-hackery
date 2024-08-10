@@ -1,3 +1,5 @@
+import sys
+
 import click
 
 from newsfeed.app import main, check_subscriptions
@@ -11,10 +13,11 @@ def common_options(function):
 
 @click.command("check")
 @common_options
-def check(log: str) -> None:
+def check() -> None:
     configure_logging()
     check_subscriptions()
     shutdown_logging()
+    sys.exit(0)
 
 
 if __name__ == "__main__":

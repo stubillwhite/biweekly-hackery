@@ -1,11 +1,10 @@
 from typing import cast
-from unittest import mock
 from unittest.mock import patch, Mock, AsyncMock, MagicMock
 
 import aiohttp
 import pytest
 
-from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed, hackery
+from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed
 
 
 def strip_margin(s: str) -> str:
@@ -15,10 +14,16 @@ def strip_margin(s: str) -> str:
     return "\n".join(stripped)
 
 
-async def create_resp(status_code=200, resp_data=None):
-    resp = AsyncMock(status_code=status_code)
-    resp.text = resp_data
-    return resp
+def mocked_response(content: str) -> aiohttp.ClientSession:
+    mock_session = MagicMock()
+    mock_response = AsyncMock()
+
+    mock_session.__aenter__.return_value = mock_session
+    mock_session.get.return_value = mock_response
+    mock_response.__aenter__.return_value = mock_response
+    mock_response.text = AsyncMock(return_value=content)
+
+    return mock_session
 
 
 @pytest.mark.asyncio
@@ -49,30 +54,18 @@ async def test_parse_feed_given_atom_feed_then_returns_atom():
            |"""
     )
 
-    # stub_response = Mock()
-    # stub_response.content = content
-
-    mock_session = MagicMock()
-    mock_response = AsyncMock()
-
-    mock_session.__aenter__.return_value = mock_session
-    mock_session.get.return_value = mock_response
-    mock_response.text = AsyncMock(return_value=content)
-
-    # foo = create_resp(200, content)
-
-    with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mock_session):
+    with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mocked_response(content)):
         # When
-        # actual = await parse_feed(url)
-        actual = await hackery()
+        actual = await parse_feed(url)
 
         # Then
-        print(actual)
-        # assert isinstance(actual, AtomFeed)
-        # atom_feed = cast(AtomFeed, actual)
-        # assert atom_feed.title == "feed-title"
+        assert isinstance(actual, AtomFeed)
+        atom_feed = cast(AtomFeed, actual)
+        assert atom_feed.title == "feed-title"
+        assert [entry.title for entry in atom_feed.entries] == ["entry-1-title", "entry-2-title"]
 
 
+@pytest.mark.asyncio
 async def test_parse_feed_given_rss2_feed_then_returns_rss2():
     # Given
     content = strip_margin(
@@ -82,14 +75,21 @@ async def test_parse_feed_given_rss2_feed_then_returns_rss2():
            |        <link>feed-link</link>
            |        <description>feed-description</description>
            |    </channel>
+           |    <item>
+           |        <title>item-1-title</title>
+           |        <link>item-1-link</link>
+           |        <description>item-1-description</description>
+           |    </item>
+           |    <item>
+           |        <title>item-2-title</title>
+           |        <link>item-2-link</link>
+           |        <description>item-2-description</description>
+           |    </item>
            |</rss>
            |"""
     )
 
-    stub_response = Mock()
-    stub_response.content = content
-
-    with patch("requests.get", return_value=stub_response):
+    with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mocked_response(content)):
         # When
         actual = await parse_feed("stub-url")
 
@@ -98,8 +98,11 @@ async def test_parse_feed_given_rss2_feed_then_returns_rss2():
         rss2_feed = cast(RSS2Feed, actual)
         assert rss2_feed.title == "feed-title"
         assert rss2_feed.link == "feed-link"
+        assert rss2_feed.description == "feed-description"
+        assert [item.title for item in rss2_feed.items] == ["item-1-title", "item-2-title"]
 
 
+@pytest.mark.asyncio
 async def test_parse_feed_given_invalid_feed_content_then_returns_unparsable_feed():
     # Given
     content = strip_margin(
@@ -107,10 +110,7 @@ async def test_parse_feed_given_invalid_feed_content_then_returns_unparsable_fee
            |"""
     )
 
-    stub_response = Mock()
-    stub_response.content = content
-
-    with patch("requests.get", return_value=stub_response):
+    with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mocked_response(content)):
         # When
         actual = await parse_feed("stub-url")
 

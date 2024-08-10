@@ -7,31 +7,30 @@ import aiohttp
 import certifi
 import xmltodict
 from aiohttp import TCPConnector
-from pydantic import Field
-from pydantic_xml import BaseXmlModel, element
+from pydantic import Field, BaseModel, AliasPath
 
 from src.newsfeed.utils import extract
 
 logger = logging.getLogger(__name__)
 
 
-class RSS2Feed(BaseXmlModel, extra="ignore"):
-    class Item(BaseXmlModel, extra="ignore"):
+class RSS2Feed(BaseModel, extra="ignore"):
+    class Item(BaseModel, extra="ignore"):
         title: Optional[str] = None
         link: Optional[str] = None
         description: Optional[str] = None
 
-    title: str
-    link: str
-    description: Optional[str] = None # Should be mandatory, but many blogs do not include
-    items: list[Item] = element(alias="item", tag="item")
+    title: str = Field(alias=AliasPath('channel', 'title'))
+    link: str = Field(alias=AliasPath('channel', 'link'))
+    description: str = Field(alias=AliasPath('channel', 'description'))
+    items: list[Item] = Field(alias="item")
 
     @classmethod
     def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
         return data
 
 
-class UnparsableFeed(BaseXmlModel, extra="ignore"):
+class UnparsableFeed(BaseModel, extra="ignore"):
     pass
 
     @classmethod
@@ -39,7 +38,7 @@ class UnparsableFeed(BaseXmlModel, extra="ignore"):
         return data
 
 
-class UnfetchableFeed(BaseXmlModel, extra="ignore"):
+class UnfetchableFeed(BaseModel, extra="ignore"):
     pass
 
     @classmethod
@@ -47,7 +46,7 @@ class UnfetchableFeed(BaseXmlModel, extra="ignore"):
         return data
 
 
-class UnreadableFeed(BaseXmlModel, extra="ignore"):
+class UnreadableFeed(BaseModel, extra="ignore"):
     pass
 
     @classmethod
@@ -55,8 +54,8 @@ class UnreadableFeed(BaseXmlModel, extra="ignore"):
         return data
 
 
-class AtomFeed(BaseXmlModel, extra="ignore"):
-    class Entry(BaseXmlModel, extra="ignore"):
+class AtomFeed(BaseModel, extra="ignore"):
+    class Entry(BaseModel, extra="ignore"):
         id: str
         title: str
         updated: datetime
@@ -64,7 +63,7 @@ class AtomFeed(BaseXmlModel, extra="ignore"):
     id: str
     title: str
     updated: datetime
-    entries: list[Entry] = element(alias="entry", tag="entry")
+    entries: list[Entry] = Field(alias="entry")
     link: Optional[str] = Field(alias="extracted_link_self")
 
     @classmethod
@@ -76,18 +75,6 @@ class AtomFeed(BaseXmlModel, extra="ignore"):
         return data
 
 
-async def hackery():
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-
-    async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env=True) as session:
-        print(session)
-        async with session.get("http://url.com", timeout=5) as response:
-            print(response)
-            content = await response.text()
-            print(content)
-
-
-
 async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | UnfetchableFeed:
     parsers = [parse_as_atom, parse_as_rss2, parse_as_unparsable]
 
@@ -96,7 +83,6 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
     try:
         logger.info(f"Attempting to retrieve '{url}'")
         async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env=True) as session:
-            print(session)
             async with session.get(url, timeout=5) as response:
                 logger.info(f"Status code: {response.status}")
 
@@ -110,6 +96,7 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
 
     except Exception as e:
         print(e)
+        print(data)
         logger.info("Failed to retrieve feed", exc_info=e)
         return parse_as_unfetchable(url, {})
 
@@ -126,10 +113,11 @@ def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
 
 def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
     try:
-        extracted = RSS2Feed.extract_complex_fields(data["rss"]["channel"])
+        extracted = RSS2Feed.extract_complex_fields(data["rss"])
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        print(extracted['description'])
+        print(e)
+        print(data)
         logger.info(f"Failed to parse as RSS 2.0 with errors:", exc_info=e)
         logger.info(f"Failed to parse as RSS 2.0")
         return None
