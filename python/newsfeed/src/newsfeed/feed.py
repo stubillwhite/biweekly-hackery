@@ -23,7 +23,7 @@ class RSS2Feed(BaseXmlModel, extra="ignore"):
 
     title: str
     link: str
-    description: str
+    description: Optional[str] = None # Should be mandatory, but many blogs do not include
     items: list[Item] = element(alias="item", tag="item")
 
     @classmethod
@@ -70,10 +70,22 @@ class AtomFeed(BaseXmlModel, extra="ignore"):
     @classmethod
     def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
         def self_links(xs: Optional[list[dict[str, Any]]]):
-            return [link for link in xs if link.get('@rel') == 'self'] if xs is not None else None
+            return [link for link in xs if link.get("@rel") == "self"] if xs is not None else None
 
         data["extracted_link_self"] = extract(data, ["link", self_links, 0, "@href"])
         return data
+
+
+async def hackery():
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+
+    async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env=True) as session:
+        print(session)
+        async with session.get("http://url.com", timeout=5) as response:
+            print(response)
+            content = await response.text()
+            print(content)
+
 
 
 async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | UnfetchableFeed:
@@ -83,7 +95,8 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
 
     try:
         logger.info(f"Attempting to retrieve '{url}'")
-        async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env = True) as session:
+        async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env=True) as session:
+            print(session)
             async with session.get(url, timeout=5) as response:
                 logger.info(f"Status code: {response.status}")
 
@@ -96,13 +109,14 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
     #     return parse_as_unreadable(url, {})
 
     except Exception as e:
+        print(e)
         logger.info("Failed to retrieve feed", exc_info=e)
         return parse_as_unfetchable(url, {})
 
 
 def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
     try:
-        extracted = AtomFeed.extract_complex_fields(data['feed'])
+        extracted = AtomFeed.extract_complex_fields(data["feed"])
         return AtomFeed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
         logger.debug(f"Failed to parse as Atom with errors:", exc_info=e)
@@ -115,7 +129,8 @@ def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
         extracted = RSS2Feed.extract_complex_fields(data["rss"]["channel"])
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        logger.debug(f"Failed to parse as RSS 2.0 with errors:", exc_info=e)
+        print(extracted['description'])
+        logger.info(f"Failed to parse as RSS 2.0 with errors:", exc_info=e)
         logger.info(f"Failed to parse as RSS 2.0")
         return None
 
@@ -128,6 +143,7 @@ def parse_as_unparsable(url: str, data: dict[Any, Any]) -> UnparsableFeed:
 def parse_as_unfetchable(url: str, data: dict[Any, Any]) -> UnfetchableFeed:
     logger.info("Treating as unfetchable")
     return UnfetchableFeed()
+
 
 def parse_as_unreadable(url: str, data: dict[Any, Any]) -> UnreadableFeed:
     logger.info("Treating as unreadable")

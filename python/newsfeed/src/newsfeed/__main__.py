@@ -5,7 +5,7 @@ from newsfeed.logging import configure_logging, shutdown_logging
 
 
 def common_options(function):
-    function = click.option('--log', default='info')(function)
+    function = click.option("--log", default="info")(function)
     return function
 
 

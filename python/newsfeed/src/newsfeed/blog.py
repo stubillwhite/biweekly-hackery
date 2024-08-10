@@ -33,12 +33,12 @@ class LiveBlog(Blog):
 
 def from_atom_feed(url: str, feed: AtomFeed) -> LiveBlog:
     items = [Blog.Item(e.title) for e in feed.entries]
-    return LiveBlog(url, 'atom', items)
+    return LiveBlog(url, "atom", items)
 
 
 def from_rss2_feed(url: str, feed: RSS2Feed) -> LiveBlog:
     items = [Blog.Item(e.title) for e in feed.items]
-    return LiveBlog(url, 'rss-2.0', items)
+    return LiveBlog(url, "rss-2.0", items)
 
 
 async def get_blog(url: str) -> LiveBlog | DeadBlog:
@@ -49,8 +49,8 @@ async def get_blog(url: str) -> LiveBlog | DeadBlog:
         case RSS2Feed():
             return from_rss2_feed(url, cast(RSS2Feed, feed))
         case UnparsableFeed():
-            return DeadBlog(url, 'unparseable')
+            return DeadBlog(url, "unparseable")
         case UnfetchableFeed():
-            return DeadBlog(url, 'unfetchable')
+            return DeadBlog(url, "unfetchable")
         case UnreadableFeed():
-            return DeadBlog(url, 'timeout')
+            return DeadBlog(url, "timeout")

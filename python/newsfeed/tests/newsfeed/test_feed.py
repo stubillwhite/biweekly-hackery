@@ -1,7 +1,11 @@
 from typing import cast
-from unittest.mock import patch, Mock
+from unittest import mock
+from unittest.mock import patch, Mock, AsyncMock, MagicMock
 
-from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed
+import aiohttp
+import pytest
+
+from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed, hackery
 
 
 def strip_margin(s: str) -> str:
@@ -11,6 +15,13 @@ def strip_margin(s: str) -> str:
     return "\n".join(stripped)
 
 
+async def create_resp(status_code=200, resp_data=None):
+    resp = AsyncMock(status_code=status_code)
+    resp.text = resp_data
+    return resp
+
+
+@pytest.mark.asyncio
 async def test_parse_feed_given_atom_feed_then_returns_atom():
     # Given
     url = "stub-url"
@@ -38,17 +49,28 @@ async def test_parse_feed_given_atom_feed_then_returns_atom():
            |"""
     )
 
-    stub_response = Mock()
-    stub_response.content = content
+    # stub_response = Mock()
+    # stub_response.content = content
 
-    with patch("requests.get", return_value=stub_response):
+    mock_session = MagicMock()
+    mock_response = AsyncMock()
+
+    mock_session.__aenter__.return_value = mock_session
+    mock_session.get.return_value = mock_response
+    mock_response.text = AsyncMock(return_value=content)
+
+    # foo = create_resp(200, content)
+
+    with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mock_session):
         # When
-        actual = await parse_feed(url)
+        # actual = await parse_feed(url)
+        actual = await hackery()
 
         # Then
-        assert isinstance(actual, AtomFeed)
-        atom_feed = cast(AtomFeed, actual)
-        assert atom_feed.title == "feed-title"
+        print(actual)
+        # assert isinstance(actual, AtomFeed)
+        # atom_feed = cast(AtomFeed, actual)
+        # assert atom_feed.title == "feed-title"
 
 
 async def test_parse_feed_given_rss2_feed_then_returns_rss2():

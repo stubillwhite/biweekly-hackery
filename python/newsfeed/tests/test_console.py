@@ -1,10 +1,10 @@
 from click.testing import CliRunner
 
-from newsfeed.__main__ import greet
+from newsfeed.__main__ import check
 
 
 def test_greet_cli():
     runner = CliRunner()
-    result = runner.invoke(greet, ["Europe/Istanbul"])
+    result = runner.invoke(check, ["Europe/Istanbul"])
     assert result.exit_code == 0
     assert "Hello, Istanbul!" in result.output

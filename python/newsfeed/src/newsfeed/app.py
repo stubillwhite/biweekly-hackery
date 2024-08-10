@@ -8,9 +8,11 @@ from colored import Fore, Style
 from newsfeed.blog import get_blog, LiveBlog, DeadBlog
 
 subscriptions = [
-    # "http://www.martinfowler.com/bliki/bliki.atom",
+    "http://www.martinfowler.com/bliki/bliki.atom",
     "https://scala.libhunt.com/newsletter/feed",
-    # "https://blog.softwaremill.com/feed",
+    "https://blog.softwaremill.com/feed",
+
+    # "http://www.lihaoyi.com/feed.xml",
     # "http://googlescholar.blogspot.com/feeds/posts/default",
     # "http://multithreaded.stitchfix.com/feed.xml",
     # "http://techblog.netflix.com/feeds/posts/default",
@@ -38,6 +40,7 @@ async def app() -> None:
 
         print()
 
+
 # https://superfastpython.com/asyncio-gather-timeout/
 async def run_check_subscriptions() -> None:
     subscriptions = read_blogs()[:300]
@@ -49,7 +52,7 @@ async def run_check_subscriptions() -> None:
     for blog in blogs:
         match blog:
             case LiveBlog() as live_blog:
-                count['live'] = count.get('live', 0) + 1
+                count["live"] = count.get("live", 0) + 1
                 print(f"{Fore.green}Live{Style.reset}: {live_blog.format} {live_blog.url}")
 
             case DeadBlog() as dead_blog:
@@ -64,14 +67,18 @@ def check_subscriptions() -> None:
 
 
 def main() -> None:
-    logging.basicConfig(level='DEBUG')
+    logging.basicConfig(level="DEBUG")
     asyncio.run(app())
 
 
 def read_blogs() -> list[str]:
-    # return subscriptions
-    return Path(
-        '/Users/stubillwhite/Dev/my-stuff/biweekly-hackery/python/newsfeed/feedly.opml').read_text().splitlines()
+    if False:
+        return subscriptions
+    else:
+        return (
+            Path(
+                "/Users/stubillwhite/Dev/my-stuff/biweekly-hackery/python/newsfeed/feedly.opml").read_text().splitlines()
+        )
 
 
 if __name__ == "__main__":
