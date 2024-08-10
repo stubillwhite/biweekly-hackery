@@ -44,7 +44,7 @@ async def app() -> None:
 
 # https://superfastpython.com/asyncio-gather-timeout/
 async def run_check_subscriptions() -> None:
-    # subscriptions = read_blogs()[:300]
+    subscriptions = read_blogs()[:300]
     blogs = [get_blog(url) for url in subscriptions]
 
     blogs = await asyncio.gather(*blogs)

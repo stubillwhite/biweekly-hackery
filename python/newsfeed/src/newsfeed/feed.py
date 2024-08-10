@@ -7,7 +7,7 @@ import aiohttp
 import certifi
 import xmltodict
 from aiohttp import TCPConnector
-from pydantic import Field, BaseModel, AliasPath
+from pydantic import Field, BaseModel
 
 from newsfeed.utils import extract
 
@@ -20,9 +20,9 @@ class RSS2Feed(BaseModel, extra="ignore"):
         link: Optional[str] = None
         description: Optional[str] = None
 
-    title: str = Field(alias=AliasPath("channel", "title"))  # type: ignore[arg-type, literal-required]
-    link: str = Field(alias=AliasPath("channel", "link"))  # type: ignore[arg-type, literal-required]
-    description: str = Field(alias=AliasPath("channel", "description"))  # type: ignore[arg-type, literal-required]
+    title: str = Field(alias="title")
+    link: str = Field(alias="link")
+    description: str = Field(alias="description")
     items: list[Item] = Field(alias="item")
 
     @classmethod
@@ -111,7 +111,8 @@ def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
 
 def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
     try:
-        extracted = RSS2Feed.extract_complex_fields(data["rss"])
+        channel_data = data["rss"]["channel"]
+        extracted = RSS2Feed.extract_complex_fields(channel_data)
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
         logger.info("Failed to parse as RSS 2.0 with errors:", exc_info=e)

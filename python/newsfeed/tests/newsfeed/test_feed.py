@@ -1,3 +1,5 @@
+import logging
+from pathlib import Path
 from typing import cast
 from unittest.mock import patch, Mock, AsyncMock, MagicMock
 
@@ -5,6 +7,7 @@ import aiohttp
 import pytest
 
 from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed
+from newsfeed.logging_utils import configure_logging, shutdown_logging
 
 
 def strip_margin(s: str) -> str:
@@ -74,17 +77,17 @@ async def test_parse_feed_given_rss2_feed_then_returns_rss2():
            |        <title>feed-title</title>
            |        <link>feed-link</link>
            |        <description>feed-description</description>
+           |        <item>
+           |            <title>item-1-title</title>
+           |            <link>item-1-link</link>
+           |            <description>item-1-description</description>
+           |        </item>
+           |        <item>
+           |            <title>item-2-title</title>
+           |            <link>item-2-link</link>
+           |            <description>item-2-description</description>
+           |        </item>
            |    </channel>
-           |    <item>
-           |        <title>item-1-title</title>
-           |        <link>item-1-link</link>
-           |        <description>item-1-description</description>
-           |    </item>
-           |    <item>
-           |        <title>item-2-title</title>
-           |        <link>item-2-link</link>
-           |        <description>item-2-description</description>
-           |    </item>
            |</rss>
            |"""
     )
@@ -116,3 +119,21 @@ async def test_parse_feed_given_invalid_feed_content_then_returns_unparsable_fee
 
         # Then
         assert isinstance(actual, UnparsableFeed)
+
+@pytest.mark.asyncio
+async def test_parse_feed_given_failing_feed_then_parses():
+
+    logging.basicConfig(level='DEBUG')
+    # Given
+    url = "stub-url"
+    content = Path("../test-data/failing-file-1.xml").read_text()
+
+    with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mocked_response(content)):
+        # When
+        actual = await parse_feed(url)
+
+        # Then
+        print(actual)
+        assert isinstance(actual, RSS2Feed)
+        rss2_feed = cast(RSS2Feed, actual)
+
