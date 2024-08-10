@@ -3,10 +3,11 @@ import sys
 import click
 
 from newsfeed.app import main, check_subscriptions
-from newsfeed.logging import configure_logging, shutdown_logging
+from newsfeed.logging_utils import configure_logging, shutdown_logging
+from typing import Callable
 
 
-def common_options(function):
+def common_options(function: Callable) -> Callable:
     function = click.option("--log", default="info")(function)
     return function
 

@@ -9,7 +9,7 @@ import xmltodict
 from aiohttp import TCPConnector
 from pydantic import Field, BaseModel, AliasPath
 
-from src.newsfeed.utils import extract
+from newsfeed.utils import extract
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,9 @@ class RSS2Feed(BaseModel, extra="ignore"):
         link: Optional[str] = None
         description: Optional[str] = None
 
-    title: str = Field(alias=AliasPath('channel', 'title'))
-    link: str = Field(alias=AliasPath('channel', 'link'))
-    description: str = Field(alias=AliasPath('channel', 'description'))
+    title: str = Field(alias=AliasPath("channel", "title"))  # type: ignore[arg-type, literal-required]
+    link: str = Field(alias=AliasPath("channel", "link"))  # type: ignore[arg-type, literal-required]
+    description: str = Field(alias=AliasPath("channel", "description"))  # type: ignore[arg-type, literal-required]
     items: list[Item] = Field(alias="item")
 
     @classmethod
@@ -68,7 +68,7 @@ class AtomFeed(BaseModel, extra="ignore"):
 
     @classmethod
     def extract_complex_fields(cls, data: dict[Any, Any]) -> dict[Any, Any]:
-        def self_links(xs: Optional[list[dict[str, Any]]]):
+        def self_links(xs: Optional[list[dict[str, Any]]]) -> None | dict[Any, Any]:
             return [link for link in xs if link.get("@rel") == "self"] if xs is not None else None
 
         data["extracted_link_self"] = extract(data, ["link", self_links, 0, "@href"])
@@ -83,7 +83,7 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
     try:
         logger.info(f"Attempting to retrieve '{url}'")
         async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env=True) as session:
-            async with session.get(url, timeout=5) as response:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(5)) as response:
                 logger.info(f"Status code: {response.status}")
 
                 content = await response.text()
@@ -95,8 +95,6 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
     #     return parse_as_unreadable(url, {})
 
     except Exception as e:
-        print(e)
-        print(data)
         logger.info("Failed to retrieve feed", exc_info=e)
         return parse_as_unfetchable(url, {})
 
@@ -106,8 +104,8 @@ def parse_as_atom(_: str, data: dict[Any, Any]) -> AtomFeed | None:
         extracted = AtomFeed.extract_complex_fields(data["feed"])
         return AtomFeed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        logger.debug(f"Failed to parse as Atom with errors:", exc_info=e)
-        logger.info(f"Failed to parse as Atom")
+        logger.info("Failed to parse as Atom with errors:", exc_info=e)
+        logger.info("Failed to parse as Atom")
         return None
 
 
@@ -116,10 +114,8 @@ def parse_as_rss2(_: str, data: dict[Any, Any]) -> RSS2Feed | None:
         extracted = RSS2Feed.extract_complex_fields(data["rss"])
         return RSS2Feed.model_validate(extracted)
     except Exception as e:  # TODO: Tighten exception type
-        print(e)
-        print(data)
-        logger.info(f"Failed to parse as RSS 2.0 with errors:", exc_info=e)
-        logger.info(f"Failed to parse as RSS 2.0")
+        logger.info("Failed to parse as RSS 2.0 with errors:", exc_info=e)
+        logger.info("Failed to parse as RSS 2.0")
         return None
 
 

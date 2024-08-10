@@ -64,6 +64,9 @@ line-length = 120
 # Linting
 ########################################
 
+[tool.mypy]
+enable_incomplete_feature = 'NewGenericSyntax'
+
 [tool.ruff]
 src = ['src']
 extend-exclude = ['tests']

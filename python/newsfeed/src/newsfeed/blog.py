@@ -17,7 +17,7 @@ class Blog(ABC):
 
 @dataclass
 class DeadBlog(Blog):
-    def __init__(self, url: str, reason):
+    def __init__(self, url: str, reason: str):
         self.url = url
         self.items = []
         self.reason = reason
@@ -32,7 +32,7 @@ class LiveBlog(Blog):
 
 
 def from_atom_feed(url: str, feed: AtomFeed) -> LiveBlog:
-    items = [Blog.Item(e.title) for e in feed.entries]
+    items = [Blog.Item(title=e.title) for e in feed.entries]
     return LiveBlog(url, "atom", items)
 
 

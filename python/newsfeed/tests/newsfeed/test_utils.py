@@ -1,4 +1,4 @@
-from src.newsfeed.utils import extract
+from newsfeed.utils import extract
 
 
 def test_extract_given_value_exists_in_dict_then_returns_value() -> None:

@@ -6,8 +6,10 @@ def flatten[A](xss: list[list[A]]) -> list[A]:
     return [x for xs in xss for x in xs]
 
 
+# ruff: noqa: ANN401
 def extract(d: Union[Mapping, Sequence], ks: list[Any]) -> Any:
-    def get_value(data, k):
+    def get_value(data: Any, k: Any) -> Any:
+
         if callable(k):
             return k(data)
         else:

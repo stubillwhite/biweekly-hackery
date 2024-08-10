@@ -10,7 +10,7 @@ from newsfeed.feed import parse_feed, AtomFeed, RSS2Feed, UnparsableFeed
 def strip_margin(s: str) -> str:
     lines = s.splitlines()
     indent = lines[1].index("|")
-    stripped = [lines[0]] + [line[indent + 1:] for line in lines[1:]]
+    stripped = [lines[0]] + [line[indent + 1 :] for line in lines[1:]]
     return "\n".join(stripped)
 
 

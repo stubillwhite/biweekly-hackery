@@ -1,17 +1,18 @@
 import asyncio
-import logging
 from pathlib import Path
 from typing import cast
 
 from colored import Fore, Style
 
 from newsfeed.blog import get_blog, LiveBlog, DeadBlog
+from newsfeed.logging_utils import configure_logging, shutdown_logging
 
 subscriptions = [
-    "http://www.martinfowler.com/bliki/bliki.atom",
-    "https://scala.libhunt.com/newsletter/feed",
-    "https://blog.softwaremill.com/feed",
-
+    "https://knowyourteam.com/blog/feed/",
+    # "http://www.martinfowler.com/bliki/bliki.atom",
+    # "https://scala.libhunt.com/newsletter/feed",
+    # "https://blog.softwaremill.com/feed",
+    # "https://discourse.elm-lang.org/latest.rss"
     # "http://www.lihaoyi.com/feed.xml",
     # "http://googlescholar.blogspot.com/feeds/posts/default",
     # "http://multithreaded.stitchfix.com/feed.xml",
@@ -43,7 +44,7 @@ async def app() -> None:
 
 # https://superfastpython.com/asyncio-gather-timeout/
 async def run_check_subscriptions() -> None:
-    subscriptions = read_blogs()[:300]
+    # subscriptions = read_blogs()[:300]
     blogs = [get_blog(url) for url in subscriptions]
 
     blogs = await asyncio.gather(*blogs)
@@ -67,8 +68,9 @@ def check_subscriptions() -> None:
 
 
 def main() -> None:
-    logging.basicConfig(level="DEBUG")
-    asyncio.run(app())
+    configure_logging()
+    check_subscriptions()
+    shutdown_logging()
 
 
 def read_blogs() -> list[str]:
@@ -76,8 +78,9 @@ def read_blogs() -> list[str]:
         return subscriptions
     else:
         return (
-            Path(
-                "/Users/stubillwhite/Dev/my-stuff/biweekly-hackery/python/newsfeed/feedly.opml").read_text().splitlines()
+            Path("/Users/stubillwhite/Dev/my-stuff/biweekly-hackery/python/newsfeed/feedly.opml")
+            .read_text()
+            .splitlines()
         )
 
 
