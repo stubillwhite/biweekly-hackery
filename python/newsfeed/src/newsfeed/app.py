@@ -8,7 +8,10 @@ from newsfeed.blog import get_blog, LiveBlog, DeadBlog
 from newsfeed.logging_utils import configure_logging, shutdown_logging
 
 subscriptions = [
-    "https://knowyourteam.com/blog/feed/",
+    # "http://tech.noredink.com/rss",
+    "http://blog.noredink.com/rss",
+    # "https://knowyourteam.com/blog/feed/",
+    # "https://chiefobrienatwork.com/rss",
     # "http://www.martinfowler.com/bliki/bliki.atom",
     # "https://scala.libhunt.com/newsletter/feed",
     # "https://blog.softwaremill.com/feed",
@@ -44,7 +47,7 @@ async def app() -> None:
 
 # https://superfastpython.com/asyncio-gather-timeout/
 async def run_check_subscriptions() -> None:
-    subscriptions = read_blogs()[:300]
+    subscriptions = read_blogs()
     blogs = [get_blog(url) for url in subscriptions]
 
     blogs = await asyncio.gather(*blogs)

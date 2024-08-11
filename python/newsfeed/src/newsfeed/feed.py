@@ -80,10 +80,13 @@ async def parse_feed(url: str) -> AtomFeed | RSS2Feed | UnparsableFeed | Unfetch
 
     ssl_context = ssl.create_default_context(cafile=certifi.where())
 
+    timeout = aiohttp.ClientTimeout(total=60)
+    headers = { "user-agent": "curl/8.4.0", "accept": "*/*" }
+
     try:
         logger.info(f"Attempting to retrieve '{url}'")
         async with aiohttp.ClientSession(connector=TCPConnector(ssl=ssl_context), trust_env=True) as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(5)) as response:
+            async with session.get(url, timeout=timeout, headers=headers) as response:
                 logger.info(f"Status code: {response.status}")
 
                 content = await response.text()

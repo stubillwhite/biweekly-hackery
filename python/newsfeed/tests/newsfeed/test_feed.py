@@ -126,7 +126,7 @@ async def test_parse_feed_given_failing_feed_then_parses():
     logging.basicConfig(level='DEBUG')
     # Given
     url = "stub-url"
-    content = Path("../test-data/failing-file-1.xml").read_text()
+    content = Path("../test-data/failing-file-2.xml").read_text()
 
     with patch("newsfeed.feed.aiohttp.ClientSession", return_value=mocked_response(content)):
         # When
