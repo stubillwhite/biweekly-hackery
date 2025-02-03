@@ -10,6 +10,7 @@ run-app = "minesweeper.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+pip-audit = "^2.7.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
